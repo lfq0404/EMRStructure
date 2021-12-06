@@ -9,15 +9,7 @@ import regex
 from services.sentence2segment.config import root_node
 from utils.structures import CfgStructure
 
-"""
-拼接segment可能的类型
-纯文本
-单选
-复选
-单选+补充
-复选+补充
-输入框
-"""
+
 
 
 def handle(extract_obj):
@@ -54,6 +46,7 @@ def handle(extract_obj):
                         if hasattr(classify_, 'extract'):
                             classify = classify_
                             node = None
+                            break
                         elif isinstance(node, CfgStructure):
                             node = classify_
                         else:

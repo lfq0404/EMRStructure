@@ -8,6 +8,8 @@ import re
 import regex
 
 import utils.constant as cons
+import services.sentence2segment.constant as s2s_cons
+
 
 # ---------- 不同类型segment的结构  ---------------
 
@@ -30,16 +32,15 @@ class SegmentStructure:
         """
         raise ValueError('SegmentStructure.show必须重写')
 
-    def _get_input_option(self, color, value, before_display='', after_display=''):
+    def _get_input_option(self, color, value, before_display='', after_display='', placeholder='', label="其他"):
         """
         获取用户输入的选项结构
-        :param display:
         :param color:
         :param value:
         :return:
         """
         return {
-            "label": "其他",
+            "label": label,
             "display": before_display + "{自定义文本}" + after_display,
             "props": {"color": color},
             "value": str(value),
@@ -49,7 +50,7 @@ class SegmentStructure:
                 "value": "",
                 "freetextPrefix": "",
                 "freetextPostfix": "",
-                "placeholder": ""}]
+                "placeholder": placeholder}]
         }
 
 
@@ -73,7 +74,7 @@ class SingleChoiceStructure(SegmentStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        display, options = regex.findall('(.+[:：])(.+其他.*)', self.text)[0]
+        display, options = regex.findall('(.+[:：])(.+)', self.text)[0]
         self.display = display
         self.label = re.sub('[:：]', '', display)
         self.options = [i for i in re.findall(r'[^{} ]+'.format(cons.PUNCTUATION), options)]  # 标点符号 + 空格
@@ -114,7 +115,7 @@ class SingleChoiceWithOthersStructure(SingleChoiceStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        self.options = [i for i in self.options if i not in ['其他']]
+        self.options = [i for i in self.options if i not in s2s_cons.SINGLE_CHOICE_WITH_OTHERS_TEXTS]
 
     @property
     def segment(self):
@@ -124,6 +125,27 @@ class SingleChoiceWithOthersStructure(SingleChoiceStructure):
         segment['options'].append(
             self._get_input_option('red', count + 1, before_display=self.display)
         )
+
+        return segment
+
+
+class SingleChoiceWithAdditionStructure(SingleChoiceStructure):
+    """
+    预防接种史：无 不详 有 预防接种疫苗
+    单选 + 补充说明
+    """
+
+    def __init__(self, text):
+        super().__init__(text)
+        self.addtion_text = [i for i in self.options if i in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS][0]
+        self.options = [i for i in self.options if i not in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS]
+
+    @property
+    def segment(self):
+        segment = super().segment
+        # 默认是最后一个选项才有补充说明
+        segment['options'][-1]['display'] += '（{{{}}}）'.format(self.addtion_text)
+        segment['options'][-1]['addition'] = [self._get_input_option('red', 0, label='预防接种疫苗', placeholder='预防接种疫苗')]
 
         return segment
 

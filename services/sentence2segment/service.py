@@ -5,16 +5,18 @@
 # @Software: Basebit
 # @Description:
 
-from services.segment_structure.service import SingleChoiceWithOthersStructure, SingleChoiceStructure
+from services.segment_structure.service import SingleChoiceWithOthersStructure, SingleChoiceStructure, \
+    SingleChoiceWithAdditionStructure
 
 
 class SingleChoiceWithOthers:
     """
     腹部视诊：正常 膨隆 凹陷 其他
-    单选+补充
+    单选+自定义选项
     """
 
     def extract(self, sentence):
+        print('“{}” 归类为：单选+自定义选项'.format(sentence))
         return [SingleChoiceWithOthersStructure(sentence)]
 
 
@@ -25,4 +27,16 @@ class SingleChoice:
     """
 
     def extract(self, sentence):
+        print('“{}” 归类为：单选'.format(sentence))
         return [SingleChoiceStructure(sentence)]
+
+
+class SingleChoiceWithAddition:
+    """
+    预防接种史：无 不详 有 预防接种疫苗
+    单选 + 补充说明
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：单选 + 补充说明'.format(sentence))
+        return [SingleChoiceWithAdditionStructure(sentence)]

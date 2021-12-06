@@ -4,6 +4,7 @@
 # @File    : main.py
 # @Software: Basebit
 # @Description:
+import os
 
 import regex
 
@@ -59,9 +60,30 @@ if __name__ == '__main__':
         raw_text='123',
     )
     extract_obj.paragraphs = ParagraphStructure(**{
-        'test': {'sort': 1, 'paragraph': '腹部视诊：正常 膨隆 凹陷 其他。'}
+        'test': {'sort': 1, 'paragraph': '预防接种史：无 不详 有 预防接种疫苗。'}
     })
     main(
         args=[extract_obj],
         begin_handle=paragraph2sentence_handle
     )
+
+
+    base_path = '/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual'
+    g = os.walk(base_path)
+    result = []
+    for path, _, file_list in g:
+        for ind, file in enumerate(file_list):
+            with open('{}/{}'.format(base_path, file), 'r') as f:
+                raw_text = f.read()
+            extract_obj = ExtractStructure(
+                file_name=file,
+                file_path='/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual',
+                raw_text=raw_text,
+            )
+            extract_obj.paragraphs = ParagraphStructure(**{
+                '未分类': {'sort': 1, 'paragraph': raw_text}
+            })
+            main(
+                args=[extract_obj],
+                begin_handle=paragraph2sentence_handle
+            )

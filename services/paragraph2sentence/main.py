@@ -7,7 +7,6 @@
 import regex
 
 from services.paragraph2sentence.config import root_node
-from utils.funcs import replace_and_classify_base
 from utils.structures import CfgStructure, ExtractStructure, ParagraphStructure
 
 
@@ -46,6 +45,7 @@ def handle(extract_obj):
                         if hasattr(classify_, 'extract'):
                             classify = classify_
                             node = None
+                            break
                         elif isinstance(node, CfgStructure):
                             node = classify_
                         else:

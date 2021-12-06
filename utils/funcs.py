@@ -116,6 +116,7 @@ def replace_and_classify_base(obj, root_node, attr_name: str):
                 if callable(classify_):
                     classify = classify_
                     node = None
+                    break
                 else:
                     node = classify_
     if not classify:

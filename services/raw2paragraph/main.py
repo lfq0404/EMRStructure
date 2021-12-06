@@ -32,6 +32,7 @@ def handle(extract_obj):
                 if hasattr(classify_, 'extract'):
                     classify = classify_
                     node = None
+                    break
                 elif isinstance(node, CfgStructure):
                     node = classify_
                 else:
