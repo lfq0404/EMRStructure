@@ -1,0 +1,5 @@
+anytree==2.8.0
+zhon==1.1.5
+beautifulsoup4==4.10.0
+regex==2021.11.10
+jieba==0.42.1
