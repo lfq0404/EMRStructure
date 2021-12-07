@@ -116,9 +116,9 @@ def replace_and_classify_base(obj, root_node, attr_name: str):
                 if callable(classify_):
                     classify = classify_
                     node = None
-                    break
                 else:
                     node = classify_
+                break
     if not classify:
         raise ValueError('raw2paragraph的配置没有兼容：{}'.format(obj.__getattribute__(attr_name)))
 

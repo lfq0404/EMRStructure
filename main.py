@@ -54,18 +54,18 @@ def main(args, begin_handle):
 
 
 if __name__ == '__main__':
-    extract_obj = ExtractStructure(
-        file_name='西医_内科.txt',
-        file_path='/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual',
-        raw_text='123',
-    )
-    extract_obj.paragraphs = ParagraphStructure(**{
-        'test': {'sort': 1, 'paragraph': '预防接种史：无 不详 有 预防接种疫苗。'}
-    })
-    main(
-        args=[extract_obj],
-        begin_handle=paragraph2sentence_handle
-    )
+    # extract_obj = ExtractStructure(
+    #     file_name='西医_内科.txt',
+    #     file_path='/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual',
+    #     raw_text='123',
+    # )
+    # extract_obj.paragraphs = ParagraphStructure(**{
+    #     'test': {'sort': 1, 'paragraph': '吸烟史：无 有 平均_支/日，时间_年 ，戒烟：否 是 时间'}
+    # })
+    # main(
+    #     args=[extract_obj],
+    #     begin_handle=paragraph2sentence_handle
+    # )
 
 
     base_path = '/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual'
@@ -73,11 +73,12 @@ if __name__ == '__main__':
     result = []
     for path, _, file_list in g:
         for ind, file in enumerate(file_list):
+            print('开始处理：{}'.format('{}/{}'.format(base_path, file)))
             with open('{}/{}'.format(base_path, file), 'r') as f:
                 raw_text = f.read()
             extract_obj = ExtractStructure(
                 file_name=file,
-                file_path='/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual',
+                file_path=base_path,
                 raw_text=raw_text,
             )
             extract_obj.paragraphs = ParagraphStructure(**{

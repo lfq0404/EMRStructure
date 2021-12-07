@@ -28,9 +28,10 @@ def handle(extract_obj):
         for sentence in v['sentences']:
             node = root_node
             classify = None
+            print('sentence2segment预处理的文本：{}'.format(sentence))
             while node:
+                # todo：统一的方法，以本方法为准
                 # 先进行统一的替换
-                print('sentence2segment预处理的文本：{}'.format(sentence))
                 for cfg in node.replace_cfg:
                     patt = cfg['patt']
                     repl = cfg['repl']
@@ -41,20 +42,23 @@ def handle(extract_obj):
 
                 # 根据规则分类
                 for patt, classify_ in node.classify_cfg:
-                    match = regex.match(patt, sentence)
+                    match = regex.search(patt, sentence)
                     if match:
+                        print('满足条件：{}'.format(patt))
                         if hasattr(classify_, 'extract'):
                             classify = classify_
                             node = None
-                            break
                         elif isinstance(node, CfgStructure):
                             node = classify_
                         else:
                             raise ValueError('paragraph2sentence的配置错误：{}'.format(node))
-            if not classify:
-                raise ValueError('paragraph2sentence的配置没有兼容：{}'.format(v))
+                        break
+                else:
+                    raise ValueError('paragraph2sentence的配置没有兼容：{}'.format(v))
 
             segments = classify.extract(sentence)
+            for segment in segments:
+                print(segment.segment)
             getattr(extract_obj.paragraphs, k).setdefault('segments', [])
             getattr(extract_obj.paragraphs, k)['segments'].extend(segments)
 

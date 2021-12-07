@@ -27,9 +27,9 @@ def handle(extract_obj):
         # 粗断句
         blocks = get_blocks(v)
         for block in blocks:
+            print('paragraph2sentence预处理的文本：{}'.format(block))
             while node:
                 # 先进行统一的替换
-                print('paragraph2sentence预处理的文本：{}'.format(block))
                 for cfg in node.replace_cfg:
                     patt = cfg['patt']
                     repl = cfg['repl']
@@ -45,11 +45,11 @@ def handle(extract_obj):
                         if hasattr(classify_, 'extract'):
                             classify = classify_
                             node = None
-                            break
                         elif isinstance(node, CfgStructure):
                             node = classify_
                         else:
                             raise ValueError('paragraph2sentence的配置错误：{}'.format(node))
+                        break
             if not classify:
                 raise ValueError('paragraph2sentence的配置没有兼容：{}'.format(v))
 

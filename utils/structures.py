@@ -25,6 +25,7 @@ class CfgStructure:
 class ExtractStructure:
     """
     解析的结构体
+    TODO：提供print打印
     """
 
     def __init__(self, file_name, file_path, raw_text):

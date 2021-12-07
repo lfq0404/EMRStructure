@@ -32,11 +32,11 @@ def handle(extract_obj):
                 if hasattr(classify_, 'extract'):
                     classify = classify_
                     node = None
-                    break
                 elif isinstance(node, CfgStructure):
                     node = classify_
                 else:
                     raise ValueError('raw2paragraph的配置错误：{}'.format(node))
+                break
     if not classify:
         raise ValueError('raw2paragraph的配置没有兼容：{}'.format(extract_obj.raw_text))
 
