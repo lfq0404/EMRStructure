@@ -17,7 +17,10 @@ _ENUM_DISEASES = ['高血压', '脑梗塞', '糖尿病', '哮喘病', '心脏病
 
 single_choice_with_addition_node = CfgStructure(
     replace_cfg=[
-
+        {
+            'patt': '左 右 水平性 旋转性 垂直性 快相向左、右',
+            'repl': '水平性 旋转性 垂直性 快相向左 快相向右'
+        }
     ],
     classify_cfg=[
         # 吸烟史：无 有 平均_支/日，时间_年 ，戒烟：否 是 时间
@@ -32,13 +35,19 @@ single_choice_with_addition_node = CfgStructure(
         ['肋下.*剑突.*', service.SingleChoiceWithExtendText()],
         # 脊柱：正常 畸形 肿胀 瘘道 压痛(第 椎体)
         ['第.+椎体', service.SingleChoiceWithExtendText()],
+        ['部位', service.SingleChoiceWithExtendText()],
         # 气管：正中 偏移(左/右)
         ['\(.*左.+右\)', service.SingleChoiceWithSingleChoice()],
+        # 无 有(奔马律 开瓣音 第三心音 第四心音)
+        ['第三心音', service.SingleChoiceWithSingleChoice()],
+        # 耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
+        ['[左右]\(.+\).*[左右]\(.+\)', service.SingleChoiceWithSingleChoice()],
         # 预防接种史：无 不详 有 预防接种疫苗
         # 该类型的兜底方法
         ['', service.SingleChoiceWithAddition()],
     ]
 )
+
 input_node = CfgStructure(
     replace_cfg=[
         {
@@ -56,6 +65,7 @@ input_node = CfgStructure(
         ['', service.TextInput()],
     ]
 )
+
 single_choice_node = CfgStructure(
     replace_cfg=[],
     classify_cfg=[
@@ -81,6 +91,10 @@ yes_no_enum_node = CfgStructure(
             'patt': '抗结核治疗史$',
             'repl': '抗结核等治疗史'
         },
+        {
+            'patt': '抗结核治疗史$',
+            'repl': '抗结核等治疗史'
+        },
 
     ],
     classify_cfg=[
@@ -89,6 +103,7 @@ yes_no_enum_node = CfgStructure(
         # 有无xx，针对有存在选项的
         ['^有无.+[{}]'.format(''.join(util_cons.OPTION_SPLITS)), service.YesNoWithSingleChoice()],
         ['^有无.+', service.YesNoChoice()],
+        ['[{}].*有无'.format(''.join(util_cons.OPTION_SPLITS)), service.YesNoWithBeforeSingleChoice()],
     ]
 )
 
@@ -128,6 +143,58 @@ root_node = CfgStructure(
             'patt': '\(有/无\)',
             'repl': '有无'
         },
+        {
+            'patt': '不等 左 mm 右 mm',
+            'repl': '不等（左 mm 右 mm）'
+        },
+        {
+            'patt': '无 有 不详；预防接种药品：',
+            'repl': '无 不详 有 预防接种药品'
+        },
+        {
+            'patt': '无 有 不详 过敏食物/药物名称',
+            'repl': '无 不详 有 过敏食物 药物名称'
+        },
+        {
+            # 添加阴性
+            'patt': '\(减退 消失 过敏\)',
+            'repl': '(正常 减退 消失 过敏)'
+        },
+        {
+            'patt': '有\(部位',
+            'repl': '有(部位)'
+        },
+        {
+            'patt': '次 /分',
+            'repl': '次/分'
+        },
+        {
+            # 保证第一个是阴性
+            'patt': '\(有 无\)',
+            'repl': '(无 有)'
+        },
+        {
+            # 保证第一个是阴性：将“无”放在第一位
+            'patt': '(\()(?=.+(无|正常))',
+            'repl': r'\1\2 '
+        },
+        {
+            # 同时存在两个无选项，删除第二个
+            'patt': '(\((无|正常)[^(无|正常)]+?)( (无|正常))',
+            'repl': r'\1'
+        },
+        {
+            # 自身替换
+            # 耳漏(正常 左 右 血 脑脊液 脑组织)
+            # 耳漏：正常 左（血 脑脊液 脑组织） 右（血 脑脊液 脑组织）
+            'patt': '(^.+)\(((无|正常) [左右]) ([左右]) (.+)\)',
+            'repl': r'\1：\2（\5） \4（\5）'
+        },
+        {
+            # 将选项统一加上冒号
+            'patt': '(听力障碍|肠鸣音|压痛及叩击痛|膀胱区膨隆) (?=(无|正常|是))',
+            'repl': r'\1：'
+        },
 
     ],
 
@@ -136,14 +203,18 @@ root_node = CfgStructure(
         ['(.+[:：])(.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_OTHERS_TEXTS)),
          service.SingleChoiceWithOthers()],
         # 单选 + 补充说明：针对“有”
-        ['(.+[:：])(.+有.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
+        ['(.+[:：])(.+（有|可触及）.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
          single_choice_with_addition_node],
         # 单选 + 补充说明：偏移 (左/右)
         ['(.+[:：])(.+[\(\（].+[\)\）]\s*)', single_choice_with_addition_node],
-        #  单选类型
+        #  自定义输入
+        ['(次/分)', input_node],
+        #  冒号单选类型
         ['(.+[:：])(.+)', single_choice_node],
+        #  括号单选：经量(少 一般 多)
+        ['.+\(.+\)', service.BracketsSingleChoice()],
         #  有无+枚举类型
-        ['^有无.*', yes_no_enum_node],
+        ['有无.*', yes_no_enum_node],
         #  自定义输入类型
         ['^(.+\s+)(.+)$', input_node],
 

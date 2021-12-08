@@ -29,8 +29,19 @@ class SingleChoice:
     """
 
     def extract(self, sentence):
-        print('“{}” 归类为：\033[32m单选\033[0m'.format(sentence))
+        print('“{}” 归类为：\033[32m冒号单选\033[0m'.format(sentence))
         return [struc.SingleChoiceStructure(sentence)]
+
+
+class BracketsSingleChoice:
+    """
+    精神病(无 有)
+    括号单选单选
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：\033[32m括号单选\033[0m'.format(sentence))
+        return [struc.BracketsSingleChoiceStructure(sentence)]
 
 
 class Smoke:
@@ -83,6 +94,16 @@ class YesNoWithSingleChoice:
     def extract(self, sentence):
         print('“{}” 归类为：\033[32m是否选择后再接单选\033[0m'.format(sentence))
         return [struc.YesNoWithSingleChoiceStructure(sentence)]
+
+
+class YesNoWithBeforeSingleChoice:
+    """
+    左/右下肢有无静脉曲张
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：\033[32m是否选择后再接前部单选\033[0m'.format(sentence))
+        return [struc.YesNoWithBeforeSingleChoiceStructure(sentence)]
 
 
 class YesNoChoice:

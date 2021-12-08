@@ -36,7 +36,7 @@ def handle(extract_obj):
                     need_sub = regex.search(patt, block)
                     if need_sub:
                         block = regex.sub(patt, repl, block)
-                        print('paragraph2sentence根据规则 “{}” ，将文本修改为：{}'.format(patt, block))
+                        # print('paragraph2sentence根据规则 “{}” ，将文本修改为：{}'.format(patt, block))
 
                 # 根据规则分类
                 for patt, classify_ in node.classify_cfg:

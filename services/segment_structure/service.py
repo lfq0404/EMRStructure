@@ -104,6 +104,7 @@ class SingleChoiceStructure(SegmentStructure):
     单选的segment
     腹部视诊：正常 膨隆 凹陷
     """
+    display_format = '{}{}'
 
     def __init__(self, text, begin_ind=0, only_option=False):
         super().__init__(text)
@@ -127,7 +128,7 @@ class SingleChoiceStructure(SegmentStructure):
         for option in self.options:
             options.append({
                 'label': option,
-                'display': option if self.only_option else '{}{}'.format(self.display, option),
+                'display': option if self.only_option else self.display_format.format(self.display, option),
                 'value': str(ind),
                 'props': {
                     'color': 'green' if ind == 0 else 'red',
@@ -142,6 +143,22 @@ class SingleChoiceStructure(SegmentStructure):
             "options": options
         }
         return segment
+
+
+class BracketsSingleChoiceStructure(SingleChoiceStructure):
+    """
+    括号单选
+    """
+    display_format = '{}({})'
+
+    def __init__(self, text, begin_ind=0, only_option=False):
+        super(SingleChoiceStructure, self).__init__(text)
+        # '振动觉', '正常 减退 消失'
+        self.label, options = regex.findall('(.+?)[\(（](.+)[\)）]', self.text)[0]
+        self.begin_ind = begin_ind
+        self.only_option = only_option
+        self.display = self.label
+        self.options = [i for i in re.findall(r'[^{} ]+'.format(cons.BROKEN_PUNC), options)]  # 标点符号 + 空格
 
 
 class SingleChoiceWithOthersStructure(SingleChoiceStructure):
@@ -333,7 +350,7 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
     def __init__(self, text):
         super().__init__(text)
         # '瞳孔：', '等大等圆 不等', '(左 mm 右 mm)'
-        self.display, self.options, self.extend_text = re.findall('(.+[:：])\s*(.+)(\(.+\))', text)[0]
+        self.display, self.options, self.extend_text = re.findall('(.+[:：])\s*(.+)([\(（].+[\)）])', text)[0]
 
     def show(self):
         return SingleChoiceStructure(self.display + self.options).show()
@@ -356,15 +373,20 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
 
 class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
     """
-    气管：正中 偏移 (左/右)
+    角膜：正常 混浊(左 右) 溃疡(左 右)
     """
 
     def __init__(self, text):
         super().__init__(text)
-        # '气管：', '正中 偏移 ', '(左/右)'
-        self.display, self.options, sub_options = re.findall('(.+[:：])\s*(.+)(\(.+\))', text)[0]
+        # ['混浊(左 右)', '溃疡(左 右)']
+        self.addition_options = re.findall('(?<=[\s:：])(\S+?[\(（].+?[\)）])', text)
+        # 角膜：正常
+        for i in self.addition_options:
+            text = text.replace(i, '')
+        # '角膜：', '正常'
+        self.display, self.options = re.findall('(.+[:：])\s*(.+)', text)[0]
         # ['左', '右']
-        self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
+        # self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
 
     def show(self):
         return SingleChoiceStructure(self.display + self.options).show()
@@ -372,10 +394,26 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
     @property
     def segment(self):
         segment = SingleChoiceStructure(self.display + self.options).segment
-        # 默认是最后一个选项才有补充说明
-        segment['options'][-1]['display'] += '({方位})'
-        segment['options'][-1]['addition'] = [SingleChoiceStructure(
-            '方位：{}'.format(' '.join(self.sub_options)), begin_ind=1, only_option=True).segment]
+        last_value = int(segment['options'][-1]['value'])
+        for addition_option in self.addition_options:
+            last_value += 1
+            temp = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), addition_option) if i]
+            label = temp[0]
+            if conf.OPTIONS_MAP.get(''.join(temp[1:])):
+                addition_label, sub_options = conf.OPTIONS_MAP[''.join(temp[1:])]
+            else:
+                addition_label = ''.join(temp[1:])
+                sub_options = temp[1:]
+            segment['options'].append({
+                'label': label,
+                'display': '{}{}({{{}}})'.format(self.display, label, addition_label),
+                'value': str(last_value),
+                'props': {
+                    'color': 'red'
+                },
+                'addition': [SingleChoiceStructure(
+                    '{}：{}'.format(addition_label, ' '.join(sub_options)), begin_ind=1, only_option=True).segment]
+            })
 
         return segment
 
@@ -435,8 +473,42 @@ class YesNoWithSingleChoiceStructure(YesNoChoiceStructure):
             raise ValueError('YesNoWithSingleChoiceStructure的配置还不兼容：{}'.format(self.raw_text))
 
         # 将display：'有下肢水肿(轻/中/重)' --> '有下肢水肿({轻中重})'
-        # todo：将“无”的二级选项删掉
         segment['options'][-1]['display'] += '（{{{}}}）'.format(opt[0])
+        segment['options'][-1]['addition'] = [
+            SingleChoiceStructure('{}:{}'.format(opt[0], ' '.join(options)), begin_ind=1,
+                                  only_option=True).segment,
+        ]
+        return segment
+
+
+class YesNoWithBeforeSingleChoiceStructure(YesNoChoiceStructure):
+    """
+    左/右下肢有无静脉曲张
+    """
+
+    def __init__(self, text):
+        super().__init__(text)
+        self.raw_text = self.text
+        # 左右下肢有无静脉曲张
+        self.text = self._del_option_splits(self.raw_text)
+        # 下肢有无静脉曲张
+        for repl in conf.OPTIONS_MAP:
+            self.text = self.text.replace(repl, '')
+
+    @property
+    def segment(self):
+        segment = super().segment
+        # 去掉所有的选项分割符，与配置比较
+        text_temp = self._del_option_splits(self.raw_text)
+        options = []
+        for option_text, opt in conf.OPTIONS_MAP.items():
+            if option_text in text_temp:
+                options = opt[1]
+                break
+        if not options:
+            raise ValueError('YesNoWithSingleChoiceStructure的配置还不兼容：{}'.format(self.raw_text))
+
+        segment['options'][-1]['display'] = '{{{}}}'.format(opt[0]) + segment['options'][-1]['display']
         segment['options'][-1]['addition'] = [
             SingleChoiceStructure('{}:{}'.format(opt[0], ' '.join(options)), begin_ind=1,
                                   only_option=True).segment,

@@ -22,7 +22,7 @@ if __name__ == '__main__':
         'test':
             {
                 'sort': 1,
-                'paragraph': '(有/无)下肢水肿(轻/中/重)'
+                'paragraph': '耳漏(左 右 血 脑脊液 脑组织 无)'
             }
     })
     main(
