@@ -417,7 +417,9 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
             display = '{}{}'.format(self.display, option)
 
             options.append({
-                'label': re.sub('\(.*\)', '', option),
+                # 剔除括号内的内容
+                # 左（性质） --> 左
+                'label': re.sub('[\(（].*[\)）]', '', option),
                 'display': display,
                 'value': str(ind),
                 'props': {
