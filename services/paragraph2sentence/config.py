@@ -16,7 +16,19 @@ from utils.structures import CfgStructure
 _ENUM_DISEASES = ['高血压', '脑梗塞', '糖尿病', '哮喘病', '心脏病']
 
 root_node = CfgStructure(
-    replace_cfg=[],
+    replace_cfg=[
+        {
+            # 补全右括号
+            'patt': '(.*)(\()([^\)]*)$',
+            'repl': r'\1\2\3)'
+        },
+        {
+            # 补全右括号
+            'patt': '(.*)(（)([^\)]*)$',
+            'repl': r'\1\2\3）'
+        },
+
+    ],
     classify_cfg=[
         # ['/有阳性家族史', service.SpecialWordBlockExtract([('有阳性家族史', 'n')])],
         # ['体质一般', service.SpecialWordBlockExtract([('一般', 'option')])],

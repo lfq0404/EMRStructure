@@ -27,4 +27,5 @@ SINGLE_CHOICE_WITH_ADDITION_TEXTS = [
     '大小肋下',
     '剑突下',
     '部位',
+    '过敏药品名称：',
 ]

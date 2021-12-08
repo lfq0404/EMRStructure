@@ -98,6 +98,33 @@ class SegmentStructure:
         """
         return regex.sub('[{}]'.format(''.join(cons.OPTION_SPLITS)), '', text)
 
+    def _get_options(self, str_options):
+        """
+        从字符串中提取选项
+        :param str_options: 只包含选项的字符串
+        :return:
+        """
+        options = []
+        option = ''
+        is_continue = False
+        # 等大等圆 不等大(左 mm 右 mm) 不等圆(左 mm 右 mm)
+        # 括号中的空格不作为区分选项
+        for i in re.split(r'[{} ]'.format(cons.BROKEN_PUNC), str_options):
+            # 如果存在左括号，则继续添加
+            if re.search('[\(（]', i):
+                is_continue = True
+                # 如果存在右括号，则停止
+            if re.search('[\)）]', i):
+                is_continue = False
+
+            if is_continue:
+                option += ' ' + i
+            else:
+                option += i
+                options.append(option.strip())
+                option = ''
+        return options
+
 
 class SingleChoiceStructure(SegmentStructure):
     """
@@ -108,12 +135,12 @@ class SingleChoiceStructure(SegmentStructure):
 
     def __init__(self, text, begin_ind=0, only_option=False):
         super().__init__(text)
-        display, options = regex.findall('(.+?[:：])(.+)', self.text)[0]
+        display, str_options = regex.findall('(.+?[:：])(.+)', self.text)[0]
         self.display = display
         self.begin_ind = begin_ind
         self.only_option = only_option  # 是否在display中只展示选项
         self.label = re.sub('[:：]', '', display)
-        self.options = [i for i in re.findall(r'[^{} ]+'.format(cons.BROKEN_PUNC), options)]  # 标点符号 + 空格
+        self.options = self._get_options(str_options)
 
     def show(self):
         return {
@@ -188,6 +215,7 @@ class SingleChoiceWithAdditionStructure(SingleChoiceStructure):
     预防接种史：无 不详 有 预防接种疫苗
     单选 + 补充说明
     """
+    ADDITION_OPTIONS = ['有']
 
     def __init__(self, text):
         super().__init__(text)
@@ -199,9 +227,19 @@ class SingleChoiceWithAdditionStructure(SingleChoiceStructure):
         segment = super().segment
         # 默认是最后一个选项才有补充说明
         # 拼接结果为：'毒品接触史 ：有（{毒品名称}，{时间}，{给药方式}）'
-        segment['options'][-1]['display'] += '（{}）'.format('，'.join(['{{{}}}'.format(i) for i in self.addtion_texts]))
-        segment['options'][-1]['addition'] = [self._get_text_addition(label=i, placeholder=i) for i in
-                                              self.addtion_texts]
+        for option in segment['options']:
+            # 如果label在配置中，则把addition加在该选项中
+            if option['label'] in self.ADDITION_OPTIONS:
+                option['display'] += '（{}）'.format('，'.join(['{{{}}}'.format(i) for i in self.addtion_texts]))
+                option['addition'] = [self._get_text_addition(label=i, placeholder=i) for i in
+                                      self.addtion_texts]
+                break
+        else:
+            # 如果遍历完都没有配置的label，则加在最后一个选项中
+            segment['options'][-1]['display'] += '（{}）'.format(
+                '，'.join(['{{{}}}'.format(i) for i in self.addtion_texts]))
+            segment['options'][-1]['addition'] = [self._get_text_addition(label=i, placeholder=i) for i in
+                                                  self.addtion_texts]
 
         return segment
 
@@ -345,29 +383,55 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
         {'patt': '边缘', 'repl': '边缘：{边缘}', 'label': '边缘'},
         {'patt': '压痛', 'repl': '压痛：{压痛}', 'label': '压痛'},
         {'patt': '第\s+椎体', 'repl': '第{椎体}椎体', 'label': '椎体'},
+        {'patt': '性质', 'repl': '性质：{性质}', 'label': '性质'},
     ]
 
     def __init__(self, text):
         super().__init__(text)
-        # '瞳孔：', '等大等圆 不等', '(左 mm 右 mm)'
-        self.display, self.options, self.extend_text = re.findall('(.+[:：])\s*(.+)([\(（].+[\)）])', text)[0]
+        # # '瞳孔：', '等大等圆 不等', '(左 mm 右 mm)'
+        # self.display, self.options, self.extend_text = re.findall('(.+[:：])\s*(.+)([\(（].+[\)）])', text)[0]
+        # '瞳孔：', '等大等圆 不等大(左 mm 右 mm) 不等圆(左 mm 右 mm)'
+        self.display, self.str_options = re.findall('(.+[:：])\s*(.*)', text)[0]
+        self.options = self._get_options(self.str_options)
+        self.label = self._get_label_name(self.display)
 
     def show(self):
-        return SingleChoiceStructure(self.display + self.options).show()
+        return {
+            self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
+            self.KEY_SEGMENT: self.segment,
+        }
 
     @property
     def segment(self):
-        segment = SingleChoiceStructure(self.display + self.options).segment
-        # 默认是最后一个选项才有补充说明
-        addtions = []
-        for cfg in self.replace_cfg:
-            match = regex.search(cfg['patt'], self.extend_text)
-            if match:
-                addtions.append(cfg['label'])
-                self.extend_text = regex.sub(cfg['patt'], cfg['repl'], self.extend_text)
-        segment['options'][-1]['display'] += self.extend_text
-        segment['options'][-1]['addition'] = [self._get_text_addition(label=i) for i in addtions]
+        options = []
+        ind = 0
+        for option in self.options:
+            addtions = []
+            for cfg in self.replace_cfg:
+                match = regex.search(cfg['patt'], option)
+                if match:
+                    addtions.append(cfg['label'])
+                    option = regex.sub(cfg['patt'], cfg['repl'], option)
 
+            addition = [self._get_text_addition(label=i) for i in addtions] or None
+            display = '{}{}'.format(self.display, option)
+
+            options.append({
+                'label': re.sub('\(.*\)', '', option),
+                'display': display,
+                'value': str(ind),
+                'props': {
+                    'color': 'green' if ind == 0 else 'red',
+                },
+                'addition': addition
+            })
+            ind += 1
+        segment = {
+            "label": self.label,
+            "type": "RADIO",
+            "value": ['0'],
+            "options": options
+        }
         return segment
 
 
@@ -375,6 +439,7 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
     """
     角膜：正常 混浊(左 右) 溃疡(左 右)
     """
+    DESC_SUBS = ['性质']
 
     def __init__(self, text):
         super().__init__(text)
@@ -397,13 +462,19 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         last_value = int(segment['options'][-1]['value'])
         for addition_option in self.addition_options:
             last_value += 1
-            temp = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), addition_option) if i]
+            temp = [i for i in
+                    regex.split('[{} {}]'.format(cons.PUNCTUATION, ''.join(cons.OPTION_SPLITS)), addition_option) if i]
             label = temp[0]
             if conf.OPTIONS_MAP.get(''.join(temp[1:])):
-                addition_label, sub_options = conf.OPTIONS_MAP[''.join(temp[1:])]
+                addition_label, subs = conf.OPTIONS_MAP[''.join(temp[1:])]
             else:
                 addition_label = ''.join(temp[1:])
-                sub_options = temp[1:]
+                subs = temp[1:]
+
+            # 可能存在描述性的子项
+            sub_options = [i for i in subs if i not in self.DESC_SUBS]
+            sub_descs = [i for i in subs if i in self.DESC_SUBS]
+
             segment['options'].append({
                 'label': label,
                 'display': '{}{}({{{}}})'.format(self.display, label, addition_label),
@@ -411,8 +482,9 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
                 'props': {
                     'color': 'red'
                 },
-                'addition': [SingleChoiceStructure(
-                    '{}：{}'.format(addition_label, ' '.join(sub_options)), begin_ind=1, only_option=True).segment]
+                'addition': [
+                    SingleChoiceStructure('{}：{}'.format(addition_label, ' '.join(sub_options)), begin_ind=1,
+                                          only_option=True).segment]
             })
 
         return segment

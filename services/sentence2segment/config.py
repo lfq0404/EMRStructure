@@ -20,7 +20,12 @@ single_choice_with_addition_node = CfgStructure(
         {
             'patt': '左 右 水平性 旋转性 垂直性 快相向左、右',
             'repl': '水平性 旋转性 垂直性 快相向左 快相向右'
-        }
+        },
+        {
+            'patt': '左 右 心前区',
+            'repl': '左心前区 右心前区'
+        },
+
     ],
     classify_cfg=[
         # 吸烟史：无 有 平均_支/日，时间_年 ，戒烟：否 是 时间
@@ -35,13 +40,13 @@ single_choice_with_addition_node = CfgStructure(
         ['肋下.*剑突.*', service.SingleChoiceWithExtendText()],
         # 脊柱：正常 畸形 肿胀 瘘道 压痛(第 椎体)
         ['第.+椎体', service.SingleChoiceWithExtendText()],
-        ['部位', service.SingleChoiceWithExtendText()],
+        ['(部位|性质)', service.SingleChoiceWithExtendText()],
         # 气管：正中 偏移(左/右)
         ['\(.*左.+右\)', service.SingleChoiceWithSingleChoice()],
         # 无 有(奔马律 开瓣音 第三心音 第四心音)
-        ['第三心音', service.SingleChoiceWithSingleChoice()],
+        ['\(.*(第三心音|瘀斑|心前区)', service.SingleChoiceWithSingleChoice()],
         # 耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
-        ['[左右]\(.+\).*[左右]\(.+\)', service.SingleChoiceWithSingleChoice()],
+        ['[左右][（\(].+[）\)].*[左右][（\(].+[）\)]', service.SingleChoiceWithSingleChoice()],
         # 预防接种史：无 不详 有 预防接种疫苗
         # 该类型的兜底方法
         ['', service.SingleChoiceWithAddition()],
@@ -67,7 +72,9 @@ input_node = CfgStructure(
 )
 
 single_choice_node = CfgStructure(
-    replace_cfg=[],
+    replace_cfg=[
+
+    ],
     classify_cfg=[
         # 吸烟史：无 有 平均_支/日，时间_年 ，戒烟：否 是 时间
         ['吸烟史.+', service.Smoke()],
@@ -75,6 +82,8 @@ single_choice_node = CfgStructure(
         ['饮酒史.+', service.Drink()],
         # 肢体长度：左 cm 右 cm
         ['[左右].*?cm.*[左右].*cm', input_node],
+        # 肢体长度：左 cm 右 cm
+        ['生育史', input_node],
         # 发育 ：正常 不良 超常
         # 该类型的兜底方法
         ['', service.SingleChoice()],
@@ -152,6 +161,10 @@ root_node = CfgStructure(
             'repl': '无 不详 有 预防接种药品'
         },
         {
+            'patt': '有\(左 右 性质',
+            'repl': '左 右 性质'
+        },
+        {
             'patt': '无 有 不详 过敏食物/药物名称',
             'repl': '无 不详 有 过敏食物 药物名称'
         },
@@ -187,7 +200,7 @@ root_node = CfgStructure(
             # 自身替换
             # 耳漏(正常 左 右 血 脑脊液 脑组织)
             # 耳漏：正常 左（血 脑脊液 脑组织） 右（血 脑脊液 脑组织）
-            'patt': '(^.+)\(((无|正常) [左右]) ([左右]) (.+)\)',
+            'patt': '(^.+?)[\(:：]?((无|正常) [左右]) ([左右]) (.+?)[\)]?$',
             'repl': r'\1：\2（\5） \4（\5）'
         },
         {
@@ -195,7 +208,19 @@ root_node = CfgStructure(
             'patt': '(听力障碍|肠鸣音|压痛及叩击痛|膀胱区膨隆) (?=(无|正常|是))',
             'repl': r'\1：'
         },
-
+        {
+            # 将这些词前面的空格换成逗号
+            'patt': '([ ]+)(?=(结婚年龄|妊娠|足月产|流产|早产))',
+            'repl': '，'
+        },
+        {
+            'patt': '未 见',
+            'repl': '未见'
+        },
+        {
+            'patt': ' 表现为瘀点或出血点 、紫癜 、瘀斑 、血肿',
+            'repl': '(瘀点或出血点、紫癜、瘀斑、血肿)'
+        }
     ],
 
     classify_cfg=[
@@ -203,7 +228,7 @@ root_node = CfgStructure(
         ['(.+[:：])(.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_OTHERS_TEXTS)),
          service.SingleChoiceWithOthers()],
         # 单选 + 补充说明：针对“有”
-        ['(.+[:：])(.+（有|可触及）.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
+        ['(.+[:：])(.+(有|可触及).+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
          single_choice_with_addition_node],
         # 单选 + 补充说明：偏移 (左/右)
         ['(.+[:：])(.+[\(\（].+[\)\）]\s*)', single_choice_with_addition_node],
