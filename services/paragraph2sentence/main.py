@@ -27,7 +27,7 @@ def handle(extract_obj):
         # 粗断句
         blocks = get_blocks(v)
         for block in blocks:
-            print('paragraph2sentence预处理的文本：{}'.format(block))
+            # print('paragraph2sentence预处理的文本：{}'.format(block))
             while node:
                 # 先进行统一的替换
                 for cfg in node.replace_cfg:
@@ -36,7 +36,7 @@ def handle(extract_obj):
                     need_sub = regex.search(patt, block)
                     if need_sub:
                         block = regex.sub(patt, repl, block)
-                        print('根据规则 “{}” ，将文本修改为：{}'.format(patt, block))
+                        print('paragraph2sentence根据规则 “{}” ，将文本修改为：{}'.format(patt, block))
 
                 # 根据规则分类
                 for patt, classify_ in node.classify_cfg:

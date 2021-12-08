@@ -28,7 +28,7 @@ def handle(extract_obj):
         for sentence in v['sentences']:
             node = root_node
             classify = None
-            print('sentence2segment预处理的文本：{}'.format(sentence))
+            # print('sentence2segment预处理的文本：{}'.format(sentence))
             while node:
                 # todo：统一的方法，以本方法为准
                 # 先进行统一的替换
@@ -38,7 +38,7 @@ def handle(extract_obj):
                     need_sub = regex.search(patt, sentence)
                     if need_sub:
                         sentence = regex.sub(patt, repl, sentence)
-                        print('根据规则 “{}” ，将文本修改为：{}'.format(patt, sentence))
+                        print('sentence2segment根据规则 “{}” ，将文本修改为：{}'.format(patt, sentence))
 
                 # 根据规则分类
                 for patt, classify_ in node.classify_cfg:
@@ -51,10 +51,10 @@ def handle(extract_obj):
                         elif isinstance(node, CfgStructure):
                             node = classify_
                         else:
-                            raise ValueError('paragraph2sentence的配置错误：{}'.format(node))
+                            raise ValueError('sentence2segment的配置错误：{}'.format(node))
                         break
                 else:
-                    raise ValueError('paragraph2sentence的配置没有兼容：{}'.format(v))
+                    raise ValueError('sentence2segment的配置没有兼容：{}'.format(sentence))
 
             segments = classify.extract(sentence)
             for segment in segments:

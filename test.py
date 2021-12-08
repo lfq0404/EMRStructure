@@ -22,7 +22,7 @@ if __name__ == '__main__':
         'test':
             {
                 'sort': 1,
-                'paragraph': '鼻腔：左 cm 右 cm”'
+                'paragraph': '(有/无)下肢水肿(轻/中/重)'
             }
     })
     main(

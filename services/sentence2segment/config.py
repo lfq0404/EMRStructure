@@ -9,6 +9,7 @@
 from utils.structures import CfgStructure
 import services.sentence2segment.service as service
 import services.sentence2segment.constant as cons
+import utils.constant as util_cons
 
 _ENUM_DISEASES = ['高血压', '脑梗塞', '糖尿病', '哮喘病', '心脏病']
 
@@ -83,7 +84,11 @@ yes_no_enum_node = CfgStructure(
 
     ],
     classify_cfg=[
+        # 无穷枚举类型
         ['等', service.MultipleChoiceWithOthers()],
+        # 有无xx，针对有存在选项的
+        ['^有无.+[{}]'.format(''.join(util_cons.OPTION_SPLITS)), service.YesNoWithSingleChoice()],
+        ['^有无.+', service.YesNoChoice()],
     ]
 )
 
@@ -118,6 +123,10 @@ root_node = CfgStructure(
         {
             'patt': '(\s+)(?=[常\(（])',
             'repl': ''
+        },
+        {
+            'patt': '\(有/无\)',
+            'repl': '有无'
         },
 
     ],

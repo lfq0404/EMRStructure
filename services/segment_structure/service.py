@@ -9,6 +9,7 @@ import regex
 
 import utils.constant as cons
 import services.sentence2segment.constant as s2s_cons
+import services.segment_structure.config as conf
 
 
 # ---------- 不同类型segment的结构  ---------------
@@ -62,6 +63,40 @@ class SegmentStructure:
             "value": str(value),
             "addition": [self._get_text_addition(placeholder)]
         }
+
+    def _get_radio_option(self, label, display, ind):
+        """
+        获取单选的选项
+        :param label:
+        :param display:
+        :param ind:
+        :return:
+        """
+        return {
+            "label": label,
+            "display": display,
+            "props": {
+                "color": "green" if ind == 0 else 'red'
+            },
+            "value": str(ind),
+            "addition": None
+        }
+
+    def _get_label_name(self, raw_label):
+        """
+        获取label名，主要是为了剔除所有的符号，只保留中英文
+        :param raw_label:
+        :return:
+        """
+        return ''.join([i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), raw_label) if i])
+
+    def _del_option_splits(self, text):
+        """
+        删除文本中的选项连接符
+        :param text:
+        :return:
+        """
+        return regex.sub('[{}]'.format(''.join(cons.OPTION_SPLITS)), '', text)
 
 
 class SingleChoiceStructure(SegmentStructure):
@@ -342,6 +377,70 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         segment['options'][-1]['addition'] = [SingleChoiceStructure(
             '方位：{}'.format(' '.join(self.sub_options)), begin_ind=1, only_option=True).segment]
 
+        return segment
+
+
+class YesNoChoiceStructure(SegmentStructure):
+    """
+    有无末梢发绀
+    """
+
+    def __init__(self, text):
+        super().__init__(text)
+        self.label = self._get_label_name(self.text.replace('有无', ''))
+
+    def show(self):
+        return {
+            self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
+            self.KEY_SEGMENT: self.segment,
+        }
+
+    @property
+    def segment(self):
+        return {
+            "label": self.label,
+            "type": "RADIO",
+            "value": [
+                "0"
+            ],
+            "options": [self._get_radio_option(*i) for i in [
+                ['无', self.text.replace('有无', '无'), 0],
+                ['有', self.text.replace('有无', '有'), 1],
+            ]],
+
+        }
+
+
+class YesNoWithSingleChoiceStructure(YesNoChoiceStructure):
+    """
+    有无下肢水肿(轻/中/重)
+    """
+
+    def __init__(self, text):
+        super().__init__(text)
+        self.raw_text = self.text
+        self.text = re.sub('\(.*\)', '', self.text)
+
+    @property
+    def segment(self):
+        segment = super().segment
+        # 去掉所有的选项分割符，与配置比较
+        text_temp = self._del_option_splits(self.raw_text)
+        options = []
+        for option_text, opt in conf.OPTIONS_MAP.items():
+            if option_text in text_temp:
+                options = opt[1]
+                break
+        if not options:
+            raise ValueError('YesNoWithSingleChoiceStructure的配置还不兼容：{}'.format(self.raw_text))
+
+        # 将display：'有下肢水肿(轻/中/重)' --> '有下肢水肿({轻中重})'
+        # todo：将“无”的二级选项删掉
+        segment['options'][-1]['display'] += '（{{{}}}）'.format(opt[0])
+        segment['options'][-1]['addition'] = [
+            SingleChoiceStructure('{}:{}'.format(opt[0], ' '.join(options)), begin_ind=1,
+                                  only_option=True).segment,
+        ]
         return segment
 
 

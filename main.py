@@ -67,15 +67,18 @@ if __name__ == '__main__':
     #     begin_handle=paragraph2sentence_handle
     # )
 
-
     base_path = '/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual'
     g = os.walk(base_path)
     result = []
     for path, _, file_list in g:
         for ind, file in enumerate(file_list):
+            if 'txt' not in file:
+                continue
             print('开始处理：{}'.format('{}/{}'.format(base_path, file)))
             with open('{}/{}'.format(base_path, file), 'r') as f:
                 raw_text = f.read()
+            if not raw_text:
+                continue
             extract_obj = ExtractStructure(
                 file_name=file,
                 file_path=base_path,

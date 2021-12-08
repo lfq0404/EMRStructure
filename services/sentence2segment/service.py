@@ -4,8 +4,10 @@
 # @File    : service.py
 # @Software: Basebit
 # @Description:
+import regex
 
 import services.segment_structure.service as struc
+import utils.constant as util_cons
 
 
 class SingleChoiceWithOthers:
@@ -71,6 +73,26 @@ class SingleChoiceWithSingleChoice:
     def extract(self, sentence):
         print('“{}” 归类为：\033[32m单选后再接单选\033[0m'.format(sentence))
         return [struc.SingleChoiceWithSingleChoiceStructure(sentence)]
+
+
+class YesNoWithSingleChoice:
+    """
+    有无下肢水肿(轻/中/重)
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：\033[32m是否选择后再接单选\033[0m'.format(sentence))
+        return [struc.YesNoWithSingleChoiceStructure(sentence)]
+
+
+class YesNoChoice:
+    """
+    有无末梢发绀
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：\033[32m是否选择\033[0m'.format(sentence))
+        return [struc.YesNoChoiceStructure(sentence)]
 
 
 class SingleChoiceWithAddition:
