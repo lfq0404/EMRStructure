@@ -85,6 +85,15 @@ class SingleChoiceWithSingleChoice:
         print('“{}” 归类为：\033[32m单选后再接单选\033[0m'.format(sentence))
         return [struc.SingleChoiceWithSingleChoiceStructure(sentence)]
 
+class LRChoiceWithSingleChoice:
+    """
+    Laseque征：左(- +)；右(- +)
+    """
+
+    def extract(self, sentence):
+        print('“{}” 归类为：\033[32m单选后再接单选\033[0m'.format(sentence))
+        return [struc.LRChoiceWithSingleChoiceStructure(sentence)]
+
 
 class YesNoWithSingleChoice:
     """

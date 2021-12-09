@@ -27,6 +27,15 @@ root_node = CfgStructure(
             'patt': '(.*)(（)([^\)]*)$',
             'repl': r'\1\2\3）'
         },
+        {
+            'patt': '一',
+            'repl': '-'
+        },
+        {
+            'patt': '十',
+            'repl': '+'
+        },
+
 
     ],
     classify_cfg=[

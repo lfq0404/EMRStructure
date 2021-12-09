@@ -11,10 +11,10 @@ from zhon.hanzi import punctuation as zh_punc
 PUNCTUATION = cn_punc + zh_punc
 
 # 选项的分割线。以下相隔的文本视为选项
-OPTION_SPLITS = ['/', '或']
+OPTION_SPLITS = ['/', '或', '、', '；']
 
 # 不断句的标点符号
-NOT_BROKEN_PUNC = ['°', ' ', '(', ')', '（', '）', '+', '-', '’', '：', ':', '、'] + OPTION_SPLITS
+NOT_BROKEN_PUNC = ['°', ' ', '(', ')', '（', '）', '+', '-', '’', '：', ':'] + OPTION_SPLITS
 
 # 用于断句的标点符号
 BROKEN_PUNC = ''.join([i for i in PUNCTUATION if i not in NOT_BROKEN_PUNC])

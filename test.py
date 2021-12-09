@@ -22,7 +22,8 @@ if __name__ == '__main__':
         'test':
             {
                 'sort': 1,
-                'paragraph': '鼻腔：正常(左 右) 迟钝(左 右) 消失(左 右)'
+                # 'paragraph': 'Laseque征：左(一 十)；右(一 十)'
+                'paragraph': '桡骨膜反射：右( )；左( )；'
             }
     })
     main(

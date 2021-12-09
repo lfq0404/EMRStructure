@@ -179,13 +179,15 @@ class BracketsSingleChoiceStructure(SingleChoiceStructure):
     """
     display_format = '{}({})'
 
-    def __init__(self, text, begin_ind=0, only_option=False):
+    def __init__(self, text, begin_ind=0, only_option=False, color=None):
+        # 继承SegmentStructure
         super(SingleChoiceStructure, self).__init__(text)
         # '振动觉', '正常 减退 消失'
         self.label, options = regex.findall('(.+?)[\(（](.+)[\)）]', self.text)[0]
         self.begin_ind = begin_ind
         self.only_option = only_option
         self.display = self.label
+        self.color = color
         self.options = [i for i in re.findall(r'[^{} ]+'.format(cons.BROKEN_PUNC), options)]  # 标点符号 + 空格
 
 
@@ -454,10 +456,10 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         for i in self.addition_options:
             text = text.replace(i, '')
         # '角膜：', '正常'
-        self.display, self.normal_str_options = re.findall('(.+[:：])\s*(.+)', text)[0]
+        self.display, self.normal_str_options = re.findall('(.+[:：])\s*(.*)', text)[0]
         self.label = self._get_label_name(self.display)
         # 去掉最后的标点：居中、 --》 居中
-        self.normal_str_options = re.sub('[{}]$'.format(''.join(cons.NOT_BROKEN_PUNC)), '', self.normal_str_options)
+        self.normal_str_options = re.sub('[\s{}]$'.format(''.join(cons.NOT_BROKEN_PUNC)), '', self.normal_str_options)
         # ['左', '右']
         # self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
 
@@ -482,14 +484,14 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         last_value = int(segment['options'][-1]['value']) if segment['options'] else -1
         for addition_option in self.addition_options:
             last_value += 1
-            temp = [i for i in
-                    regex.split('[{} {}]'.format(cons.PUNCTUATION, ''.join(cons.OPTION_SPLITS)), addition_option) if i]
+            # 将 右(- +) --> ['右', '-', '+']
+            temp = [i for i in regex.split('[、\(\)（）\s]', addition_option) if i]
             label = temp[0]
             if conf.OPTIONS_MAP.get(''.join(temp[1:])):
                 addition_label, subs = conf.OPTIONS_MAP[''.join(temp[1:])]
             else:
-                addition_label = ''.join(temp[1:])
                 subs = temp[1:]
+                addition_label = ''.join(subs)
 
             # 可能存在描述性的子项
             sub_options = [i for i in subs if i not in self.DESC_SUBS]
@@ -509,6 +511,56 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
             })
 
         return segment
+
+
+class LRChoiceWithSingleChoiceStructure(SingleChoiceWithSingleChoiceStructure):
+    """
+    耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
+    左右需要作为多选
+    """
+
+    # @property
+    # def segment(self):
+    #     if self.normal_str_options:
+    #         segment = SingleChoiceStructure(self.display + self.normal_str_options + '有').segment
+    #     else:
+    #         segment = {
+    #             "label": self.label,
+    #             "type": "RADIO",
+    #             "value": ['0'],
+    #             "options": []
+    #         }
+    #
+    #     last_value = int(segment['options'][-1]['value']) if segment['options'] else -1
+    #     for addition_option in self.addition_options:
+    #         last_value += 1
+    #         # 将 右(- +) --> ['右', '-', '+']
+    #         temp = [i for i in regex.split('[、\(\)（）\s]', addition_option) if i]
+    #         label = temp[0]
+    #         if conf.OPTIONS_MAP.get(''.join(temp[1:])):
+    #             addition_label, subs = conf.OPTIONS_MAP[''.join(temp[1:])]
+    #         else:
+    #             subs = temp[1:]
+    #             addition_label = ''.join(subs)
+    #
+    #         # 可能存在描述性的子项
+    #         sub_options = [i for i in subs if i not in self.DESC_SUBS]
+    #         sub_descs = [i for i in subs if i in self.DESC_SUBS]
+    #
+    #         color = 'green' if last_value == 0 else 'red'
+    #         segment['options'].append({
+    #             'label': label,
+    #             'display': '{}{}({{{}}})'.format(self.display, label, addition_label),
+    #             'value': str(last_value),
+    #             'props': {
+    #                 'color': color,
+    #             },
+    #             'addition': [
+    #                 SingleChoiceStructure('{}：{}'.format(addition_label, ' '.join(sub_options)), only_option=True,
+    #                                       color=color).segment]
+    #         })
+    #
+    #     return segment
 
 
 class YesNoChoiceStructure(SegmentStructure):
