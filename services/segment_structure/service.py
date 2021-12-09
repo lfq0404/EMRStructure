@@ -445,22 +445,26 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        # ['混浊(左 右)', '溃疡(左 右)']
-        self.addition_options = re.findall('(?<=[\s:：])(\S+?[\(（].+?[\)）])', text)
+        # 获取有扩展的选项 ['混浊(左 右)', '溃疡(左 右)']
+        # self.addition_options = re.findall('(?<=[\s:：])(\S+?[\(（].+?[\)）])', text)
+        self.addition_options = re.findall(
+            '(?<=[\s{a}])([^\s{a}]+?[\(（].+?[\)）])'.format(a=''.join(cons.NOT_BROKEN_PUNC)), self.text)
         # 角膜：正常
         for i in self.addition_options:
             text = text.replace(i, '')
         # '角膜：', '正常'
-        self.display, self.options = re.findall('(.+[:：])\s*(.+)', text)[0]
+        self.display, self.normal_str_options = re.findall('(.+[:：])\s*(.+)', text)[0]
+        # 去掉最后的标点：居中、 --》 居中
+        self.normal_str_options = re.sub('[{}]$'.format(''.join(cons.NOT_BROKEN_PUNC)), '', self.normal_str_options)
         # ['左', '右']
         # self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
 
     def show(self):
-        return SingleChoiceStructure(self.display + self.options).show()
+        return SingleChoiceStructure(self.display + self.normal_str_options).show()
 
     @property
     def segment(self):
-        segment = SingleChoiceStructure(self.display + self.options).segment
+        segment = SingleChoiceStructure(self.display + self.normal_str_options).segment
         last_value = int(segment['options'][-1]['value'])
         for addition_option in self.addition_options:
             last_value += 1

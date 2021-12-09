@@ -44,7 +44,7 @@ single_choice_with_addition_node = CfgStructure(
         # 气管：正中 偏移(左/右)
         ['\(.*左.+右\)', service.SingleChoiceWithSingleChoice()],
         # 无 有(奔马律 开瓣音 第三心音 第四心音)
-        ['\(.*(第三心音|瘀斑|心前区)', service.SingleChoiceWithSingleChoice()],
+        ['\(.*(第三心音|瘀斑|心前区|脑组织)', service.SingleChoiceWithSingleChoice()],
         # 耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
         ['[左右][（\(].+[）\)].*[左右][（\(].+[）\)]', service.SingleChoiceWithSingleChoice()],
         # 预防接种史：无 不详 有 预防接种疫苗
