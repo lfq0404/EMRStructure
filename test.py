@@ -22,7 +22,7 @@ if __name__ == '__main__':
         'test':
             {
                 'sort': 1,
-                'paragraph': '气管：居中、偏移(左、右)'
+                'paragraph': '鼻腔：正常(左 右) 迟钝(左 右) 消失(左 右)'
             }
     })
     main(

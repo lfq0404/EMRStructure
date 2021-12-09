@@ -133,7 +133,7 @@ class SingleChoiceStructure(SegmentStructure):
     """
     display_format = '{}{}'
 
-    def __init__(self, text, begin_ind=0, only_option=False):
+    def __init__(self, text, begin_ind=0, only_option=False, color=None):
         super().__init__(text)
         display, str_options = regex.findall('(.+?[:：])(.+)', self.text)[0]
         self.display = display
@@ -141,6 +141,7 @@ class SingleChoiceStructure(SegmentStructure):
         self.only_option = only_option  # 是否在display中只展示选项
         self.label = re.sub('[:：]', '', display)
         self.options = self._get_options(str_options)
+        self.color = color  # 如果指定了颜色，这些选项都用一样的颜色（主要作用于子选项）
 
     def show(self):
         return {
@@ -158,7 +159,7 @@ class SingleChoiceStructure(SegmentStructure):
                 'display': option if self.only_option else self.display_format.format(self.display, option),
                 'value': str(ind),
                 'props': {
-                    'color': 'green' if ind == 0 else 'red',
+                    'color': self.color or ('green' if ind == 0 else 'red'),
                 },
                 'addition': None
             })
@@ -454,18 +455,31 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
             text = text.replace(i, '')
         # '角膜：', '正常'
         self.display, self.normal_str_options = re.findall('(.+[:：])\s*(.+)', text)[0]
+        self.label = self._get_label_name(self.display)
         # 去掉最后的标点：居中、 --》 居中
         self.normal_str_options = re.sub('[{}]$'.format(''.join(cons.NOT_BROKEN_PUNC)), '', self.normal_str_options)
         # ['左', '右']
         # self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
 
     def show(self):
-        return SingleChoiceStructure(self.display + self.normal_str_options).show()
+        return {
+            self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
+            self.KEY_SEGMENT: self.segment,
+        }
 
     @property
     def segment(self):
-        segment = SingleChoiceStructure(self.display + self.normal_str_options).segment
-        last_value = int(segment['options'][-1]['value'])
+        if self.normal_str_options:
+            segment = SingleChoiceStructure(self.display + self.normal_str_options).segment
+        else:
+            segment = {
+                "label": self.label,
+                "type": "RADIO",
+                "value": ['0'],
+                "options": []
+            }
+
+        last_value = int(segment['options'][-1]['value']) if segment['options'] else -1
         for addition_option in self.addition_options:
             last_value += 1
             temp = [i for i in
@@ -481,16 +495,17 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
             sub_options = [i for i in subs if i not in self.DESC_SUBS]
             sub_descs = [i for i in subs if i in self.DESC_SUBS]
 
+            color = 'green' if last_value == 0 else 'red'
             segment['options'].append({
                 'label': label,
                 'display': '{}{}({{{}}})'.format(self.display, label, addition_label),
                 'value': str(last_value),
                 'props': {
-                    'color': 'red'
+                    'color': color,
                 },
                 'addition': [
-                    SingleChoiceStructure('{}：{}'.format(addition_label, ' '.join(sub_options)), begin_ind=1,
-                                          only_option=True).segment]
+                    SingleChoiceStructure('{}：{}'.format(addition_label, ' '.join(sub_options)), only_option=True,
+                                          color=color).segment]
             })
 
         return segment
