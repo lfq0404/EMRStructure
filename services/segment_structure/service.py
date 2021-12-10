@@ -287,7 +287,7 @@ class SmokeStructure(SingleChoiceStructure):
         segment = super().segment
         segment['options'].append({
             "label": "有",
-            "display": "平均{频率}支/日，时间{吸烟时长}年，{戒烟}",
+            "display": "吸烟史：平均{频率}支/日，时间{吸烟时长}年，{戒烟}",
             "props": {
                 "color": "red"
             },
@@ -322,7 +322,7 @@ class DrinkStructure(SingleChoiceStructure):
         segment = super().segment
         segment['options'].append({
             "label": "有",
-            "display": "平均{频率}{单位}/日，时间{饮酒时长}年，{戒酒}",
+            "display": "饮酒史：平均{频率}{单位}/日，时间{饮酒时长}年，{戒酒}",
             "props": {
                 "color": "red"
             },

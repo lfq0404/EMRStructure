@@ -17,7 +17,7 @@ if __name__ == '__main__':
             {
                 'sort': 1,
                 # 'paragraph': 'Laseque征：左(一 十)；右(一 十)'
-                'paragraph': '口唇发绀：无 、有'
+                'paragraph': '吸烟史：无 有 平均_支/日，时间_年 ，戒烟：否 是 时间'
             }
     }
     main(

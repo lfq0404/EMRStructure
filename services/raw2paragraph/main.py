@@ -6,6 +6,7 @@
 # @Description:
 import regex
 
+import utils.funcs as util_func
 from services.raw2paragraph.config import root_node
 from utils.structures import CfgStructure
 
@@ -17,27 +18,29 @@ def handle(extract_obj):
     :param extract_obj:
     :return:
     """
-    node = root_node
-    classify = None
-    while node:
-        # 先进行统一的替换
-        for cfg in node.replace_cfg:
-            patt = cfg['patt']
-            repl = cfg['repl']
-            extract_obj.raw_text = regex.sub(patt, repl, extract_obj.raw_text)
-        # 根据规则分类
-        for patt, classify_ in node.classify_cfg:
-            match = regex.match(patt, extract_obj.raw_text)
-            if match:
-                if hasattr(classify_, 'extract'):
-                    classify = classify_
-                    node = None
-                elif isinstance(node, CfgStructure):
-                    node = classify_
-                else:
-                    raise ValueError('raw2paragraph的配置错误：{}'.format(node))
-                break
-    if not classify:
-        raise ValueError('raw2paragraph的配置没有兼容：{}'.format(extract_obj.raw_text))
+    # node = root_node
+    # classify = None
+    # while node:
+    #     # 先进行统一的替换
+    #     for cfg in node.replace_cfg:
+    #         patt = cfg['patt']
+    #         repl = cfg['repl']
+    #         extract_obj.raw_text = regex.sub(patt, repl, extract_obj.raw_text)
+    #     # 根据规则分类
+    #     for patt, classify_ in node.classify_cfg:
+    #         match = regex.match(patt, extract_obj.raw_text)
+    #         if match:
+    #             if hasattr(classify_, 'extract'):
+    #                 classify = classify_
+    #                 node = None
+    #             elif isinstance(node, CfgStructure):
+    #                 node = classify_
+    #             else:
+    #                 raise ValueError('raw2paragraph的配置错误：{}'.format(node))
+    #             break
+    # if not classify:
+    #     raise ValueError('raw2paragraph的配置没有兼容：{}'.format(extract_obj.raw_text))
 
+    classify, extract_obj.raw_text = util_func.replace_and_classify_base(extract_obj.raw_text, root_node,
+                                                                         'raw2paragraph')
     return classify.extract(extract_obj)

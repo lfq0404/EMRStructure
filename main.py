@@ -51,31 +51,30 @@ def main(args, begin_handle):
                 new_args.append(_new)
         args = new_args.copy()
 
-    return args
+    display = ''
+    segments = []
+    for arg in args:
+        d = ''
+        type_ = None
+        for type_, infos in arg.paragraphs.items():
+            for segment in infos['segments_show']:
+                d += segment['display'] + '。'
+                segments.append(segment['segment'])
+        if not type_:
+            continue
+        display += '<b>{}</b>：{}\r\n'.format(type_, d)
 
-    # display = ''
-    # segments = []
-    # for arg in args:
-    #     d = ''
-    #     type_ = None
-    #     for type_, infos in arg.paragraphs.items():
-    #         for segment in infos['segments_show']:
-    #             d += segment['display'] + '。'
-    #             segments.append(segment['segment'])
-    #     if not type_:
-    #         continue
-    #     display += '<b>{}</b>：{}\r\n'.format(type_, d)
-    #
-    # with open('rjPhysicalDemo/template_base.json', 'r') as f:
-    #     raw_json = json.loads(f.read())
-    #
-    # with open('rjPhysicalDemo/template.json', 'w') as f:
-    #     raw_json['medical_history']['display'] = display + raw_json['medical_history']['display']
-    #     raw_json['medical_history']['segments'].extend(segments)
-    #
-    #     f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))
-    # print(arg.file_name)
-    # print('请检查')
+    with open('rjPhysicalDemo/template_base.json', 'r') as f:
+        raw_json = json.loads(f.read())
+
+    with open('rjPhysicalDemo/template.json', 'w') as f:
+        raw_json['medical_history']['display'] = display + raw_json['medical_history']['display']
+        raw_json['medical_history']['segments'].extend(segments)
+
+        f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))
+    print(arg.file_name)
+    print('请检查')
+    return args
 
 
 if __name__ == '__main__':

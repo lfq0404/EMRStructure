@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 
 from html.parser import HTMLParser
 
+from utils.structures import CfgStructure
+
 
 class HtmlParse(HTMLParser):
     """
@@ -93,33 +95,42 @@ class HtmlParse(HTMLParser):
         return text
 
 
-def replace_and_classify_base(obj, root_node, attr_name: str):
+def replace_and_classify_base(sentence, node, step):
     """
     绝大部分层的统一逻辑
     先统一替换
     再分类
-    :param obj:
-    :param root_node:
-    :param attr_name:
+    :param sentence:
+    :param node:
     :return:
     """
-    node = root_node
+    print('{}预处理的文本：{}'.format(step, sentence))
     classify = None
     while node:
+        # todo：统一的方法，以本方法为准
         # 先进行统一的替换
-        for patt, repl in node.replace_cfg:
-            obj.__setattr__(attr_name, regex.sub(patt, repl, obj.__getattribute__(attr_name)))
+        for cfg in node.replace_cfg:
+            patt = cfg['patt']
+            repl = cfg['repl']
+            need_sub = regex.search(patt, sentence)
+            if need_sub:
+                sentence = regex.sub(patt, repl, sentence)
+                print('{}根据规则 “{}” ，将文本修改为：{}'.format(step, patt, sentence))
+
         # 根据规则分类
         for patt, classify_ in node.classify_cfg:
-            match = regex.match(patt, obj.__getattribute__(attr_name))
+            match = regex.search(patt, sentence)
             if match:
-                if callable(classify_):
+                print('满足条件：{}'.format(patt))
+                if hasattr(classify_, 'extract'):
                     classify = classify_
                     node = None
-                else:
+                elif isinstance(node, CfgStructure):
                     node = classify_
+                else:
+                    raise ValueError('{}的配置错误：{}'.format(step, node))
                 break
-    if not classify:
-        raise ValueError('raw2paragraph的配置没有兼容：{}'.format(obj.__getattribute__(attr_name)))
+        else:
+            raise ValueError('{}的配置没有兼容：{}'.format(step, sentence))
 
-    return classify().extract(obj)
+    return classify, sentence

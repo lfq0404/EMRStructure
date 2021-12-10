@@ -7,9 +7,8 @@
 import regex
 
 from services.sentence2segment.config import root_node
+import utils.funcs as util_func
 from utils.structures import CfgStructure
-
-
 
 
 def handle(extract_obj):
@@ -26,35 +25,7 @@ def handle(extract_obj):
         #     'sentences': ['长期生活于原籍', ',' ,'无烟酒等不良嗜好', ',', '无冶游史']
         # }
         for sentence in v['sentences']:
-            node = root_node
-            classify = None
-            # print('sentence2segment预处理的文本：{}'.format(sentence))
-            while node:
-                # todo：统一的方法，以本方法为准
-                # 先进行统一的替换
-                for cfg in node.replace_cfg:
-                    patt = cfg['patt']
-                    repl = cfg['repl']
-                    need_sub = regex.search(patt, sentence)
-                    if need_sub:
-                        sentence = regex.sub(patt, repl, sentence)
-                        print('sentence2segment根据规则 “{}” ，将文本修改为：{}'.format(patt, sentence))
-
-                # 根据规则分类
-                for patt, classify_ in node.classify_cfg:
-                    match = regex.search(patt, sentence)
-                    if match:
-                        print('满足条件：{}'.format(patt))
-                        if hasattr(classify_, 'extract'):
-                            classify = classify_
-                            node = None
-                        elif isinstance(node, CfgStructure):
-                            node = classify_
-                        else:
-                            raise ValueError('sentence2segment的配置错误：{}'.format(node))
-                        break
-                else:
-                    raise ValueError('sentence2segment的配置没有兼容：{}'.format(sentence))
+            classify,sentence = util_func.replace_and_classify_base(sentence, root_node, 'sentence2segment')
 
             segments = classify.extract(sentence)
             for segment in segments:

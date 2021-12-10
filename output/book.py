@@ -8,28 +8,11 @@
 from main import *
 
 
-def record(result):
-    # 数据入库逻辑
-    file_names = []
-    displays = []
-    segments = []
-
-    # insert args
-    # print(args)
-    for arg in result:
-        for infos in arg.paragraphs.values():
-            for segment in infos['segments_show']:
-                file_names.append(arg.file_name)
-                displays.append(segment['display'])
-                segments.append(segment['segment'])
-    data2excel(pd.DataFrame({
-        'file_name': file_names,
-        'display': displays,
-        'segment': segments,
-    }), 'book_result.xlsx', 'base')
-
-
-if __name__ == '__main__':
+def record():
+    """
+    将原始文本解析后存入Excel
+    :return:
+    """
     base_path = '/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual'
     g = os.walk(base_path)
     for path, _, file_list in g:
@@ -53,4 +36,26 @@ if __name__ == '__main__':
                 args=[extract_obj],
                 begin_handle=paragraph2sentence_handle
             )
-            record(result)
+
+            # 数据入库逻辑
+            file_names = []
+            displays = []
+            segments = []
+
+            # insert args
+            # print(args)
+            for arg in result:
+                for infos in arg.paragraphs.values():
+                    for segment in infos['segments_show']:
+                        file_names.append(arg.file_name)
+                        displays.append(segment['display'])
+                        segments.append(segment['segment'])
+            data2excel(pd.DataFrame({
+                'file_name': file_names,
+                'display': displays,
+                'segment': segments,
+            }), 'book_result.xlsx', 'base')
+
+
+if __name__ == '__main__':
+    record()
