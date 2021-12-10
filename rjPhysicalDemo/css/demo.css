@@ -1,0 +1,33 @@
+body {
+    white-space: pre-line;
+}
+
+.segment {
+    cursor: pointer;
+    padding: 2px;
+    line-height: 30px;
+    border: 1px solid #fff;
+}
+.segment:hover {
+    border: 1px dashed #cdcdcd;
+}
+.red {
+    color: red;
+}
+.green {
+    color: green;
+}
+.black {
+    color: black;
+}
+.orange {
+    color: orange;
+}
+
+.input:hover {
+    border: 1px solid #fff;
+}
+.defaultInput {
+    width: 20px;
+}
+

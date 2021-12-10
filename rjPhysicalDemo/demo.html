@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <title>Demo</title>
+    <link rel="stylesheet" href="http://unpkg.com/layui@2.6.8/dist/css/layui.css">
+    <link rel="stylesheet" href="css/demo.css">
+    <script src="js/jquery-1.8.3.min.js"></script>
+    <script src="http://unpkg.com/layui@2.6.8/dist/layui.js"></script>
+</head>
+
+<body>
+    <div>
+        <p id="medical_history"></p>
+    </div>
+    <br>
+    <div>
+        <p id="physical"></p>
+    </div>
+    
+<script type="text/javascript">  
+    var data = null
+    function demo(result){
+        data = result
+    }
+</script>
+<script type="text/javascript" src="template.json?callback=demo"></script>
+<script src="js/demo.js"></script>
+</body>
+
+</html>
