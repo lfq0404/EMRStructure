@@ -19,7 +19,7 @@ def handle(extract_obj):
     :param extract_obj:
     :return:
     """
-    for k, v in vars(extract_obj.paragraphs).items():
+    for k, v in extract_obj.paragraphs.items():
         # v：{
         #     'sort': 5,
         #     'paragraph': ' 长期生活于原籍，无烟酒等不良嗜好，无冶游史 \n',
@@ -59,7 +59,7 @@ def handle(extract_obj):
             segments = classify.extract(sentence)
             for segment in segments:
                 print(segment.segment)
-            getattr(extract_obj.paragraphs, k).setdefault('segments', [])
-            getattr(extract_obj.paragraphs, k)['segments'].extend(segments)
+            extract_obj.paragraphs[k].setdefault('segments', [])
+            extract_obj.paragraphs[k]['segments'].extend(segments)
 
     return extract_obj

@@ -6,12 +6,6 @@
 # @Description:
 
 
-import regex
-
-from services.sentence2segment.config import root_node
-from utils.structures import CfgStructure
-
-
 def handle(extract_obj):
     """
     每层的处理逻辑入口
@@ -19,7 +13,7 @@ def handle(extract_obj):
     :param extract_obj:
     :return:
     """
-    paragraphs = vars(extract_obj.paragraphs).copy()
+    paragraphs = extract_obj.paragraphs.copy()
     for k, v in paragraphs.items():
         # v：{
         #     'sort': 5,

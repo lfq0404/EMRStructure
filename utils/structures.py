@@ -32,15 +32,3 @@ class ExtractStructure:
         self.file_name = file_name
         self.file_path = file_path
         self.raw_text = raw_text
-
-
-class ParagraphStructure:
-    """
-    paragraphs的结构体
-    """
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-

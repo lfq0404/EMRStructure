@@ -7,7 +7,7 @@
 import regex
 
 from services.paragraph2sentence.config import root_node
-from utils.structures import CfgStructure, ExtractStructure, ParagraphStructure
+from utils.structures import CfgStructure, ExtractStructure
 
 
 def handle(extract_obj):
@@ -18,7 +18,7 @@ def handle(extract_obj):
     :return:
     """
     # 针对每种史分别进行处理
-    for k, v in vars(extract_obj.paragraphs).items():
+    for k, v in extract_obj.paragraphs.items():
         # k：个人史
         # v：{'sort': 5, 'paragraph': ' 长期生活于原籍，无烟酒等不良嗜好，无冶游史。 \n'}
         node = root_node
@@ -54,8 +54,8 @@ def handle(extract_obj):
                 raise ValueError('paragraph2sentence的配置没有兼容：{}'.format(v))
 
             sentences = classify.extract(block)
-            getattr(extract_obj.paragraphs, k).setdefault('sentences', [])
-            getattr(extract_obj.paragraphs, k)['sentences'].extend(sentences)
+            extract_obj.paragraphs[k].setdefault('sentences', [])
+            extract_obj.paragraphs[k]['sentences'].extend(sentences)
 
     return extract_obj
 
@@ -75,15 +75,3 @@ def get_blocks(paragraph):
     blocks = [i.strip() for i in blocks if i.strip()]
 
     return blocks
-
-
-if __name__ == '__main__':
-    extract_obj = ExtractStructure(
-        file_name='西医_内科.txt',
-        file_path='/Users/jeremy.li/Basebit/Projects/AutoTemplate/pdf2text/bookTextsManual',
-        raw_text='接种疫苗史：乙肝、卡介苗 、脊灰糖丸 、百白破、麻疹、流脑、乙脑， 其他：',
-    )
-    extract_obj.paragraphs = ParagraphStructure(**{
-        'test': {'sort': 1, 'paragraph': '接种疫苗史：乙肝、卡介苗 、脊灰糖丸 、百白破、麻疹、流脑、乙脑， 其他：'}
-    })
-    handle(extract_obj)

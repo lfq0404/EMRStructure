@@ -46,7 +46,7 @@ single_choice_with_addition_node = CfgStructure(
         # 耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
         ['[左右][（\(].+[）\)].*[左右][（\(].+[）\)]', service.LRChoiceWithSingleChoice()],
         # 无 有(奔马律 开瓣音 第三心音 第四心音)
-        ['\(.*(第三心音|瘀斑|心前区|脑组织)', service.SingleChoiceWithSingleChoice()],
+        ['\(.*(第三心音|瘀斑|心前区|脑组织|强|疟疾)', service.SingleChoiceWithSingleChoice()],
         # 预防接种史：无 不详 有 预防接种疫苗
         # 该类型的兜底方法
         ['', service.SingleChoiceWithAddition()],
@@ -83,7 +83,7 @@ single_choice_node = CfgStructure(
         # 肢体长度：左 cm 右 cm
         ['[左右].*?cm.*[左右].*cm', input_node],
         # 肢体长度：左 cm 右 cm
-        ['生育史', input_node],
+        ['生育史|现有子女', input_node],
         # 发育 ：正常 不良 超常
         # 该类型的兜底方法
         ['', service.SingleChoice()],
@@ -220,6 +220,10 @@ root_node = CfgStructure(
         {
             'patt': ' 表现为瘀点或出血点 、紫癜 、瘀斑 、血肿',
             'repl': '(瘀点或出血点、紫癜、瘀斑、血肿)'
+        },
+        {
+            'patt': '未查 正常',
+            'repl': '正常 未查'
         },
         {
             'patt': '右\( \)；左\( \)',

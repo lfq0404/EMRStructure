@@ -28,14 +28,21 @@ root_node = CfgStructure(
             'repl': r'\1\2\3）'
         },
         {
-            'patt': '一',
-            'repl': '-'
+            'patt': '\(一',
+            'repl': '(-'
         },
         {
-            'patt': '十',
-            'repl': '+'
+            'patt': '十\)',
+            'repl': '+)'
         },
-
+        {
+            'patt': ' \(左/右\)',
+            'repl': '(左/右)'
+        },
+        {
+            'patt': '强中弱，持续',
+            'repl': '强 中 弱 持续'
+        },
 
     ],
     classify_cfg=[

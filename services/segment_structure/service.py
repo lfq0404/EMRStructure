@@ -107,9 +107,13 @@ class SegmentStructure:
         options = []
         option = ''
         is_continue = False
+        # 如果所有选项都在括号中，则剔除括号
+        if re.search('^[\(（].*', str_options):
+            str_options = re.sub('^([\(（])(.*)([\)）])$', r'\2', str_options)
+
         # 等大等圆 不等大(左 mm 右 mm) 不等圆(左 mm 右 mm)
         # 括号中的空格不作为区分选项
-        for i in re.split(r'[{} ]'.format(cons.BROKEN_PUNC), str_options):
+        for i in re.split(r'[{} ]'.format(''.join(cons.OPTION_SPLITS)), str_options):
             # 如果存在左括号，则继续添加
             if re.search('[\(（]', i):
                 is_continue = True
@@ -118,10 +122,12 @@ class SegmentStructure:
                 is_continue = False
 
             if is_continue:
-                option += ' ' + i
+                option += i + ' '
             else:
                 option += i
-                options.append(option.strip())
+                option = option.strip()
+                if option:
+                    options.append(option.strip())
                 option = ''
         return options
 
@@ -155,7 +161,7 @@ class SingleChoiceStructure(SegmentStructure):
         ind = self.begin_ind
         for option in self.options:
             options.append({
-                'label': option,
+                'label': self._get_label_name(option),
                 'display': option if self.only_option else self.display_format.format(self.display, option),
                 'value': str(ind),
                 'props': {
@@ -222,8 +228,21 @@ class SingleChoiceWithAdditionStructure(SingleChoiceStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        self.addtion_texts = [i for i in self.options if i in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS]
-        self.options = [i for i in self.options if i not in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS]
+        addtion_texts, options = [],[]
+        for option in self.options:
+            temp = re.findall('[\(（](.+)[\)）]', option)
+            if temp:
+                addtion_texts.extend(self._get_options(temp[0]))
+                option = re.sub('[\(（](.+)[\)）]', '', option)
+
+            if option in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS:
+                addtion_texts.append(option)
+            else:
+                options.append(option)
+        self.addtion_texts = addtion_texts
+        self.options = options
+        # self.addtion_texts = [i for i in self.options if i in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS]
+        # self.options = [i for i in self.options if i not in s2s_cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS]
 
     @property
     def segment(self):
@@ -268,7 +287,7 @@ class SmokeStructure(SingleChoiceStructure):
         segment = super().segment
         segment['options'].append({
             "label": "有",
-            "display": "平均{频率}支/日，时间{吸烟时长}年，戒烟：{戒烟}",
+            "display": "平均{频率}支/日，时间{吸烟时长}年，{戒烟}",
             "props": {
                 "color": "red"
             },
@@ -303,7 +322,7 @@ class DrinkStructure(SingleChoiceStructure):
         segment = super().segment
         segment['options'].append({
             "label": "有",
-            "display": "平均{频率}{单位}/日，时间{饮酒时长}年，戒酒：{戒酒}",
+            "display": "平均{频率}{单位}/日，时间{饮酒时长}年，{戒酒}",
             "props": {
                 "color": "red"
             },
@@ -384,7 +403,6 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
         {'patt': '质地', 'repl': '质地：{质地}', 'label': '质地'},
         {'patt': '表面', 'repl': '表面：{表面}', 'label': '表面'},
         {'patt': '边缘', 'repl': '边缘：{边缘}', 'label': '边缘'},
-        {'patt': '压痛', 'repl': '压痛：{压痛}', 'label': '压痛'},
         {'patt': '第\s+椎体', 'repl': '第{椎体}椎体', 'label': '椎体'},
         {'patt': '性质', 'repl': '性质：{性质}', 'label': '性质'},
     ]
@@ -485,7 +503,7 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         for addition_option in self.addition_options:
             last_value += 1
             # 将 右(- +) --> ['右', '-', '+']
-            temp = [i for i in regex.split('[、\(\)（）\s]', addition_option) if i]
+            temp = [i for i in regex.split('[、\(\)（）\s/]', addition_option) if i]
             label = temp[0]
             if conf.OPTIONS_MAP.get(''.join(temp[1:])):
                 addition_label, subs = conf.OPTIONS_MAP[''.join(temp[1:])]
@@ -671,7 +689,7 @@ class MultipleChoiceStructure(SegmentStructure):
         super().__init__(text)
         self.str_options = text
         self.begin_ind = begin_ind
-        self.label = regex.sub('[{}]'.format(cons.BROKEN_PUNC), '', self.str_options)
+        self.label = self._get_label_name(self.str_options)
         # ['乙肝', '卡介苗', '脊灰糖丸', '百白破', '麻疹', '流脑', '乙脑']
         self.options = regex.split('[{}]'.format(cons.BROKEN_PUNC), self.text)
 
@@ -688,7 +706,7 @@ class MultipleChoiceStructure(SegmentStructure):
         ind = self.begin_ind
         for option in self.options:
             options.append({
-                'label': option,
+                'label': self._get_label_name(option),
                 'display': option,
                 'value': str(ind),
                 'props': {
@@ -720,8 +738,8 @@ class MultipleChoiceWithOthersStructure(MultipleChoiceStructure):
         self.str_options, self.desc = re.findall('有无(.*)(等.*)', text)[0]
         self.text = self.str_options
         self.begin_ind = begin_ind
-        self.label = regex.sub('[{}]'.format(cons.BROKEN_PUNC), '', self.str_options)
-        self.options = regex.split('[{}]'.format(cons.BROKEN_PUNC), self.text)
+        self.label = self._get_label_name(self.str_options)
+        self.options = self._get_options(self.text)
 
     @property
     def segment(self):
@@ -731,7 +749,7 @@ class MultipleChoiceWithOthersStructure(MultipleChoiceStructure):
         segment['options'].append(self._get_input_option('red', value, before_display='其他：'))
         # 拼接“有无”的那层选项
         return {
-            'label': '有无' + label,
+            'label': label,
             'type': 'RADIO',
             'value': ['0'],
             'options': [
@@ -753,6 +771,5 @@ class MultipleChoiceWithOthersStructure(MultipleChoiceStructure):
                     "addition": [segment],
                     "value": "1"
                 },
-
             ]
         }

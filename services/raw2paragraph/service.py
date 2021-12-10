@@ -7,7 +7,6 @@
 import regex
 
 import services.raw2paragraph.config as conf
-from utils.structures import ParagraphStructure
 
 
 class ColonCut:
@@ -75,7 +74,7 @@ class ColonCut:
             'sort': k[0],
             'paragraph': v
         } for k, v in paragraphs.items() if k not in del_keys}
-        extract_obj.paragraphs = ParagraphStructure(**paragraphs)
+        extract_obj.paragraphs = paragraphs
         # paragraphs = sorted([[k[0], k[1], v] for k, v in paragraphs.items()], key=lambda x: x[0])
         #
         # paragraphs = [i[1:] for i in paragraphs]
