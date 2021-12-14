@@ -4,8 +4,11 @@
 # @File    : constant.py
 # @Software: Basebit
 # @Description: 全局公共常量
+import os
 from string import punctuation as cn_punc
 from zhon.hanzi import punctuation as zh_punc
+
+BASE_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # 所有中英文的标点符号
 PUNCTUATION = cn_punc + zh_punc

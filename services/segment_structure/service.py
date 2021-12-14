@@ -18,6 +18,7 @@ import services.segment_structure.config as conf
 class SegmentStructure:
     KEY_DISPLAY = 'display'
     KEY_SEGMENT = 'segment'
+    KEY_TEXT = 'text'
 
     def __init__(self, text):
         before_punctuation, text, after_punctuation = re.findall(
@@ -153,6 +154,7 @@ class SingleChoiceStructure(SegmentStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -228,7 +230,7 @@ class SingleChoiceWithAdditionStructure(SingleChoiceStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        addtion_texts, options = [],[]
+        addtion_texts, options = [], []
         for option in self.options:
             temp = re.findall('[\(（](.+)[\)）]', option)
             if temp:
@@ -280,6 +282,7 @@ class SmokeStructure(SingleChoiceStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -315,6 +318,7 @@ class DrinkStructure(SingleChoiceStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -346,7 +350,7 @@ class TextInputStructure(SegmentStructure):
 
     def __init__(self, text):
         super().__init__(text)
-        self.label = re.sub('[{}输入]'.format(cons.PUNCTUATION), '', self.text)
+        self.label = re.split('[{}输入]'.format(cons.PUNCTUATION), self.text)[0]
         n = 0
         self.add_labels = []
         while '输入' in self.text:
@@ -361,6 +365,7 @@ class TextInputStructure(SegmentStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -405,6 +410,12 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
         {'patt': '边缘', 'repl': '边缘：{边缘}', 'label': '边缘'},
         {'patt': '第\s+椎体', 'repl': '第{椎体}椎体', 'label': '椎体'},
         {'patt': '性质', 'repl': '性质：{性质}', 'label': '性质'},
+        {'patt': '种类', 'repl': '种类：{种类}', 'label': '种类'},
+        {'patt': '部位', 'repl': '部位：{部位}', 'label': '部位'},
+        {'patt': '程度和频度：', 'repl': '程度和频度：{程度和频度}', 'label': '程度和频度'},
+        {'patt': '单位', 'repl': '单位：{单位}', 'label': '单位'},
+        {'patt': '时间', 'repl': '时间：{时间}', 'label': '时间'},
+        {'patt': '计量', 'repl': '计量：{计量}', 'label': '计量'},
     ]
 
     def __init__(self, text):
@@ -412,7 +423,7 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
         # # '瞳孔：', '等大等圆 不等', '(左 mm 右 mm)'
         # self.display, self.options, self.extend_text = re.findall('(.+[:：])\s*(.+)([\(（].+[\)）])', text)[0]
         # '瞳孔：', '等大等圆 不等大(左 mm 右 mm) 不等圆(左 mm 右 mm)'
-        self.display, self.str_options = re.findall('(.+[:：])\s*(.*)', text)[0]
+        self.display, self.str_options = re.findall('(.+?[:：])\s*(.*)', text)[0]
         self.options = self._get_options(self.str_options)
         self.label = self._get_label_name(self.display)
 
@@ -420,6 +431,7 @@ class SingleChoiceWithExtendTextStructure(SegmentStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -485,6 +497,7 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -594,6 +607,7 @@ class YesNoChoiceStructure(SegmentStructure):
         return {
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property
@@ -698,6 +712,7 @@ class MultipleChoiceStructure(SegmentStructure):
             self.KEY_DISPLAY: '{}{{{}}}{}'.format(
                 self.before_punctuation, self.label, self.after_punctuation),
             self.KEY_SEGMENT: self.segment,
+            self.KEY_TEXT: self.text,
         }
 
     @property

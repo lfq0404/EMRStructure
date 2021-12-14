@@ -5,6 +5,7 @@
 # @Software: Basebit
 # @Description: 全局公共方法
 
+import json
 import regex
 import re
 from bs4 import BeautifulSoup
@@ -12,6 +13,7 @@ from bs4 import BeautifulSoup
 from html.parser import HTMLParser
 
 from utils.structures import CfgStructure
+import utils.constant as cons
 
 
 class HtmlParse(HTMLParser):
@@ -107,7 +109,6 @@ def replace_and_classify_base(sentence, node, step):
     print('{}预处理的文本：{}'.format(step, sentence))
     classify = None
     while node:
-        # todo：统一的方法，以本方法为准
         # 先进行统一的替换
         for cfg in node.replace_cfg:
             patt = cfg['patt']
@@ -134,3 +135,20 @@ def replace_and_classify_base(sentence, node, step):
             raise ValueError('{}的配置没有兼容：{}'.format(step, sentence))
 
     return classify, sentence
+
+
+def update_html(display, segments):
+    """
+    修改HTML，用于看效果
+    :param display:
+    :param segments:
+    :return:
+    """
+    with open('{}/rjPhysicalDemo/template_base.json'.format(cons.BASE_PATH), 'r') as f:
+        raw_json = json.loads(f.read())
+
+    with open('{}/rjPhysicalDemo/template.json'.format(cons.BASE_PATH), 'w') as f:
+        raw_json['medical_history']['display'] = display + raw_json['medical_history']['display']
+        raw_json['medical_history']['segments'].extend(segments)
+
+        f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))

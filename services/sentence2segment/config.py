@@ -25,6 +25,10 @@ single_choice_with_addition_node = CfgStructure(
             'patt': '左 右 心前区',
             'repl': '左心前区 右心前区'
         },
+        {
+            'patt': '\s血管活性药物的种类及单位时间计量',
+            'repl': '(种类 单位 时间 计量)'
+        },
 
     ],
     classify_cfg=[
@@ -41,6 +45,7 @@ single_choice_with_addition_node = CfgStructure(
         # 脊柱：正常 畸形 肿胀 瘘道 压痛(第 椎体)
         ['第.+椎体', service.SingleChoiceWithExtendText()],
         ['(部位|性质)', service.SingleChoiceWithExtendText()],
+        ['种类 单位 时间 计量', service.SingleChoiceWithExtendText()],
         # 气管：正中 偏移(左/右)
         ['\(.*左.+右\)', service.SingleChoiceWithSingleChoice()],
         # 耳漏：无 左(血 脑脊液 脑组织) 右(血 脑脊液 脑组织)
@@ -60,6 +65,10 @@ input_node = CfgStructure(
             'repl': '左输入cm，右输入cm'
         },
         {
+            'patt': '/文字描述',
+            'repl': ''
+        },
+        {
             # 将所有空格视为输入
             'patt': '\s+',
             'repl': '输入'
@@ -67,6 +76,7 @@ input_node = CfgStructure(
 
     ],
     classify_cfg=[
+        ['', service.TextInput()],
         ['', service.TextInput()],
     ]
 )
@@ -236,7 +246,7 @@ root_node = CfgStructure(
         ['(.+[:：])(.+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_OTHERS_TEXTS)),
          service.SingleChoiceWithOthers()],
         # 单选 + 补充说明：针对“有”
-        ['(.+[:：])(.+(有|可触及).+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
+        ['(.+[:：])(.+(有|可触及|是).+({}).*)'.format('|'.join(cons.SINGLE_CHOICE_WITH_ADDITION_TEXTS)),
          single_choice_with_addition_node],
         # 单选 + 补充说明：偏移 (左/右)
         ['(.+[:：])(.+[\(\（].+[\)\）]\s*)', single_choice_with_addition_node],

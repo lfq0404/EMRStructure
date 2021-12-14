@@ -28,4 +28,5 @@ SINGLE_CHOICE_WITH_ADDITION_TEXTS = [
     '剑突下',
     '部位',
     '过敏药品名称：',
+    '血管活性药物的种类及单位时间计量',
 ]

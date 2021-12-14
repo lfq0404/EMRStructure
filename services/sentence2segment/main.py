@@ -25,7 +25,7 @@ def handle(extract_obj):
         #     'sentences': ['长期生活于原籍', ',' ,'无烟酒等不良嗜好', ',', '无冶游史']
         # }
         for sentence in v['sentences']:
-            classify,sentence = util_func.replace_and_classify_base(sentence, root_node, 'sentence2segment')
+            classify, sentence = util_func.replace_and_classify_base(sentence, root_node, 'sentence2segment')
 
             segments = classify.extract(sentence)
             for segment in segments:

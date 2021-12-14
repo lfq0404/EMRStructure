@@ -16,7 +16,9 @@ from services.raw2paragraph.main import handle as raw2paragraph_handle
 from services.paragraph2sentence.main import handle as paragraph2sentence_handle
 from services.sentence2segment.main import handle as sentence2segment_handle
 from services.segment_structure.main import handle as segment_structure_handle
+from utils.funcs import update_html
 from utils.structures import ExtractStructure
+import utils.constant as cons
 
 # 整个层级流程配置，一般不能随意调换
 HANDLES = [
@@ -64,14 +66,8 @@ def main(args, begin_handle):
             continue
         display += '<b>{}</b>：{}\r\n'.format(type_, d)
 
-    with open('rjPhysicalDemo/template_base.json', 'r') as f:
-        raw_json = json.loads(f.read())
+    update_html(display, segments)
 
-    with open('rjPhysicalDemo/template.json', 'w') as f:
-        raw_json['medical_history']['display'] = display + raw_json['medical_history']['display']
-        raw_json['medical_history']['segments'].extend(segments)
-
-        f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))
     print(arg.file_name)
     print('请检查')
     return args
