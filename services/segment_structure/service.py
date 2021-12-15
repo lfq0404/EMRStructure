@@ -490,8 +490,6 @@ class SingleChoiceWithSingleChoiceStructure(SegmentStructure):
         self.label = self._get_label_name(self.display)
         # 去掉最后的标点：居中、 --》 居中
         self.normal_str_options = re.sub('[\s{}]$'.format(''.join(cons.NOT_BROKEN_PUNC)), '', self.normal_str_options)
-        # ['左', '右']
-        # self.sub_options = [i for i in regex.split('[{} ]'.format(cons.PUNCTUATION), sub_options) if i]
 
     def show(self):
         return {
