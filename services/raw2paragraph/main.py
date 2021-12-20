@@ -7,7 +7,7 @@
 import regex
 
 import utils.funcs as util_func
-from services.raw2paragraph.config import root_node
+from services.raw2paragraph.rule_config import root_node
 from utils.structures import CfgStructure
 
 

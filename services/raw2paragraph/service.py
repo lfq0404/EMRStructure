@@ -6,7 +6,7 @@
 # @Description:
 import regex
 
-import services.raw2paragraph.config as conf
+import services.raw2paragraph.rule_config as conf
 
 
 class ColonCut:

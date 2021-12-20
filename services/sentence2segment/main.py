@@ -6,7 +6,7 @@
 # @Description:
 import regex
 
-from services.sentence2segment.config import root_node
+from services.sentence2segment.rule_config import root_node
 import utils.funcs as util_func
 from utils.structures import CfgStructure
 

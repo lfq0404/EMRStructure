@@ -97,30 +97,31 @@ class HtmlParse(HTMLParser):
         return text
 
 
-def replace_and_classify_base(sentence, node, step):
+def replace_and_classify_base(text, node, step):
     """
     绝大部分层的统一逻辑
     先统一替换
     再分类
-    :param sentence:
+    :param text:
     :param node:
+    :param step: 
     :return:
     """
-    print('{}预处理的文本：{}'.format(step, sentence))
+    print('{}预处理的文本：{}'.format(step, text))
     classify = None
     while node:
         # 先进行统一的替换
         for cfg in node.replace_cfg:
             patt = cfg['patt']
             repl = cfg['repl']
-            need_sub = regex.search(patt, sentence)
+            need_sub = regex.search(patt, text)
             if need_sub:
-                sentence = regex.sub(patt, repl, sentence)
-                print('{}根据规则 “{}” ，将文本修改为：{}'.format(step, patt, sentence))
+                text = regex.sub(patt, repl, text)
+                print('{}根据规则 “{}” ，将文本修改为：{}'.format(step, patt, text))
 
         # 根据规则分类
         for patt, classify_ in node.classify_cfg:
-            match = regex.search(patt, sentence)
+            match = regex.search(patt, text)
             if match:
                 print('满足条件：{}'.format(patt))
                 if hasattr(classify_, 'extract'):
@@ -132,9 +133,9 @@ def replace_and_classify_base(sentence, node, step):
                     raise ValueError('{}的配置错误：{}'.format(step, node))
                 break
         else:
-            raise ValueError('{}的配置没有兼容：{}'.format(step, sentence))
+            raise ValueError('{}的配置没有兼容：{}'.format(step, text))
 
-    return classify, sentence
+    return classify, text
 
 
 def update_html(display, segments):
@@ -152,3 +153,21 @@ def update_html(display, segments):
         raw_json['medical_history']['segments'].extend(segments)
 
         f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))
+
+
+def raw_obj_call_handles(args, handles):
+    """
+    将原始的obj，调用所有的流程
+    :return:
+    """
+    for handle in handles:
+        new_args = []
+        for arg in args:
+            _new = handle(arg)
+            if type(_new) is list:
+                new_args.extend(_new)
+            else:
+                new_args.append(_new)
+        args = new_args.copy()
+
+    return args

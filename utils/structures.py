@@ -32,3 +32,12 @@ class ExtractStructure:
         self.file_name = file_name
         self.file_path = file_path
         self.raw_text = raw_text
+
+class RJExtractStructure:
+    """
+    解析的结构体
+    TODO：提供print打印
+    """
+
+    def __init__(self, diagnosis):
+        self.diagnosis = diagnosis

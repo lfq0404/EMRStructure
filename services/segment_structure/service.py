@@ -9,7 +9,7 @@ import regex
 
 import utils.constant as cons
 import services.sentence2segment.constant as s2s_cons
-import services.segment_structure.config as conf
+import services.segment_structure.rule_config as conf
 
 
 # ---------- 不同类型segment的结构  ---------------

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Time    : 2021/12/6 14:43
-# @File    : config.py
+# @File    : rule_config.py
 # @Software: Basebit
 # @Description:
 

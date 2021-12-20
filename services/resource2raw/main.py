@@ -4,7 +4,7 @@
 # @File    : main.py
 # @Software: Basebit
 # @Description:
-from services.resource2raw.config import RESOURCE_TYPE
+from services.resource2raw.rule_config import RESOURCE_TYPE
 
 
 def handle(resource_type):
