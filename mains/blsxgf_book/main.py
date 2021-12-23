@@ -8,7 +8,7 @@
 import os
 
 from mains.constant import *
-from utils.funcs import update_html, raw_obj_call_handles
+from utils.funcs import update_html, raw_obj_call_handles, check_html_with_args
 from utils.structures import ExtractStructure
 
 
@@ -20,22 +20,7 @@ def main(args, begin_handle):
     level = HANDLES.index(begin_handle)
     args = raw_obj_call_handles(args, HANDLES[level:])
 
-    display = ''
-    segments = []
-    for arg in args:
-        d = ''
-        type_ = None
-        for type_, infos in arg.paragraphs.items():
-            for segment in infos['segments_show']:
-                d += segment['display'] + '。'
-                segments.append(segment['segment'])
-        if not type_:
-            continue
-        display += '<b>{}</b>：{}\r\n'.format(type_, d)
-
-    update_html(display, segments)
-    print(arg.file_name)
-    print('请检查')
+    check_html_with_args(args)
     return args
 
 

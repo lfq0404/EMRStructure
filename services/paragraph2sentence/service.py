@@ -38,7 +38,8 @@ class Paragraph2SentenceBase:
         """
         # paragraph = '一般健康状况:一般。疾病史:否认高血压、冠心病等慢性病史。手术外伤史:因“胃息肉”行开腹手术治疗（具体不详）。输血史:否认。传染病史:诉既往曾患“肝炎”（具体不详），诉已愈。'
         # paragraph = '出生并生长于原籍，否认疫水接触史，否认吸烟史，饮酒史20余年，每日半斤黄酒，否认性病冶游史。'
-        # paragraph = '因右肺中叶恶性肿瘤病史，2019-03-25在上海胸科医院全身麻醉VATS，肺右中叶切除术，术后病理:右肺中叶外侧段肺泡上皮异型增生、癌变（原位癌，非粘液型），肿瘤肺间质内淋巴细胞浸润伴淋巴滤泡形成，右肺中叶支气管切端未见癌累及，送检5组淋巴结未见癌转移。'
+        paragraph = '因右肺中叶恶性肿瘤病史，2019-03-25在上海胸科医院全身麻醉VATS，肺右中叶切除术，术后病理:右肺中叶外侧段肺泡上皮异型增生、癌变（原位癌，非粘液型），肿瘤肺间质内淋巴细胞浸润伴淋巴滤泡形成，右肺中叶支气管切端未见癌累及，送检5组淋巴结未见癌转移。'
+        paragraph = '活动明显受限C5-7棘突及棘旁两侧压痛，压颈试验（+）、神经根牵拉试验（+），舌质红或紫暗，苔薄，脉弦细'
         # TOK ：tokenization（词语切分）
         # POS ：Part-of-speech tagging（词性标注）
         # NER ：Named Entity Recognition（命名实体识别）
@@ -51,12 +52,24 @@ class Paragraph2SentenceBase:
         # AMR : Abstract Meaning Representation（抽象意义表示）
         # doc = HanLP(paragraph, tasks=['con', 'pos', 'ner'])
         print(paragraph)
-        doc = HanLP(paragraph)
-        doc.pretty_print()
+        sentences = []
+        for p in re.split('[。；]', paragraph):
+            if re.search('^\s*$', p):
+                continue
+            p += '。{}'.format(cons.ADD_SENTENCE)
+            doc = HanLP(p)
+            doc.pretty_print()
 
-        # 第一层永远是根节点，不用遍历
-        # doc['con']是phrasetree.tree.Tree，该类型对子父节点的获取不太方便，转成list，重新构建数
-        sentences = self.get_sentences(doc['con'].to_list()[1][0])
+            # 第一层永远是根节点，不用遍历
+            # doc['con']是phrasetree.tree.Tree，暂时该类型对子父节点的获取不太方便，转成list，重新利用anytree构建树
+            # 保证将ADD_SENTENCE对应的层级进行后续处理，肯定有多个
+            # 第一层永远是‘TOP’
+            con = doc['con'].to_list()[1]
+            while 1:
+                if len(con) != 1 and type(con[0]) is list:
+                    break
+                con = con[1] if type(con[0]) is str else con[0]
+            sentences.extend(self.get_sentences(con))
 
         print()
         for i in sentences:
@@ -73,7 +86,9 @@ class Paragraph2SentenceBase:
 
         # 根据模型解析的依存关系，构建语法树
         con_tree = self._extract_con(con)
-
+        # 合并np节点
+        con_tree = self._merge_node_without_np(con_tree)
+        # 获取具有独立语义的segment
         segment_tree = self._get_segment_tree(con_tree)
 
         # 解析
@@ -86,6 +101,7 @@ class Paragraph2SentenceBase:
                 'segment_key': segment_key,
                 'sentence': sentence
             })
+            # sentences.append(sentence)
 
         return sentences
 
@@ -139,6 +155,55 @@ class Paragraph2SentenceBase:
 
         return segment_tree
 
+    def _merge_node_without_np(self, con_tree):
+        """
+        将没有NP词性的节点向左合并到NP节点下
+        无    VE ──────────────┐
+        压痛  NN ───────►NP ───┴────────────────────────►VP────┤
+        、    contact──────────────────────────────────────────┤->IP
+        反跳痛 NN ───────►VP ────────────────────────────►IP────┤
+        ，    PU ──────────────────────────────────────────────┤
+        “反跳痛”与“压痛”节点合并
+        :param con_tree:
+        :return:
+        """
+        # 由于Paragraph2SentenceBase.extract中手动添加了一句话，现在需要删除
+        con_tree.children[-1].parent = None
+
+        # 为了逻辑简单，先遍历一遍，用于处理contact的情况
+        ind = 0
+        while ind < len(con_tree.children):
+            if con_tree.children[ind].name == cons.TAG_CONTACT:
+                # 此处将本节点及下一个节点都放在 ind-1 下，不是垃圾代码，必须要两行
+                # 第0个按理说不会有contact，这里不作判断，报错了再说
+                con_tree.children[ind].parent = con_tree.children[ind - 1]
+                con_tree.children[ind].parent = con_tree.children[ind - 1]
+            else:
+                ind += 1
+
+        # 第二次遍历，用于合并NP的情况
+        childrens = con_tree.children
+        if len(childrens) > 1:
+            parent_ = childrens[1]  # 防止第0个没有NP
+            for child in childrens:
+                # 如果该节点下存在NP节点，则指定父节点为本节点，用于后续非NP节点合并
+                if findall(child, filter_=lambda x: x.name in ['NP']):
+                    # 如果该NP节点下只有一个字，则还是需要向左合并
+                    leaves = child.leaves
+                    if leaves and len(leaves) == 1 and len(leaves[0].text) == 1:
+                        child.parent = parent_
+                    else:
+                        parent_ = child
+                    continue
+                # 标点符号，则不管
+                if child.name in ['PU']:
+                    continue
+
+                # 如果没有NP节点，则向左合并
+                child.parent = parent_
+
+        return con_tree
+
     def _contact_node_text(self, node):
         """
         拼接该node的所有子node的文本
@@ -179,9 +244,8 @@ class Paragraph2SentenceBase:
         :param parent: 父节点
         :return: con_tree
         """
-        # TODO：控制一个语句的最短长度，防止“右肺”这种短句出现
         if not root:
-            root = Node(con.pop(0))
+            root = Node('root')
         if not parent:
             parent = root
 
@@ -193,16 +257,16 @@ class Paragraph2SentenceBase:
                 if ind - 1 > 0 and con[ind - 1][0] == cons.TAG_SPLIT:
                     parent = root
                 # elif con_[0] == cons.TAG_CONTACT and parent == root:
-                elif con_[0] == cons.TAG_CONTACT:
-                    # 后处理2：如果该节点的词性为contact and 被归在了根节点下，则继续跟在上一个子节点下
-                    # print('0\n', RenderTree(root))
-                    # print('1\n', RenderTree(parent))
-                    parent = parent.children[-1] if parent.children else parent
-                    if parent.descendants and parent.descendants[-1].name == cons.TAG_SPLIT:
-                        # 如果parent有结束的标识，则从新开始
-                        parent = root.children[-1]
-                    # print('2\n', RenderTree(parent))
-                    # print()
+                # elif con_[0] == cons.TAG_CONTACT:
+                #     # 后处理2：如果该节点的词性为contact and 被归在了根节点下，则继续跟在上一个子节点下
+                #     # print('0\n', RenderTree(root))
+                #     # print('1\n', RenderTree(parent))
+                #     parent = parent.children[-1] if parent.children else parent
+                #     if parent.descendants and parent.descendants[-1].name == cons.TAG_SPLIT:
+                #         # 如果parent有结束的标识，则从新开始
+                #         parent = root.children[-1]
+                #     # print('2\n', RenderTree(parent))
+                #     # print()
                 # 证明还有子节点
                 self._extract_con(con_, node or parent, root)
             elif type(con_) is str:

@@ -13,5 +13,5 @@ def demo(paragraph):
 
 
 if __name__ == '__main__':
-    paragraph = '一般健康状况：一般。疾病史：否认高血压、冠心病等慢性病史。手术外伤史：因“胃息肉”行开腹手术治疗（具体不详）'
+    paragraph = '未及胸膜摩擦音'
     demo(paragraph)

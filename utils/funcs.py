@@ -155,6 +155,30 @@ def update_html(display, segments):
         f.write('demo({})'.format(json.dumps(raw_json, ensure_ascii=False)))
 
 
+def check_html_with_args(args):
+    """
+    人工视验提取结果
+    :param args:
+    :return:
+    """
+    display = ''
+    segments = []
+    for arg in args:
+        d = ''
+        type_ = None
+        for type_, infos in arg.paragraphs.items():
+            for segment in infos['segments_show']:
+                d += segment['display'] + '。'
+                segments.append(segment['segment'])
+        if not type_:
+            continue
+        display += '<b>{}</b>：{}\r\n'.format(type_, d)
+
+    update_html(display, segments)
+    print(arg.file_name)
+    print('请检查')
+
+
 def raw_obj_call_handles(args, handles):
     """
     将原始的obj，调用所有的流程
